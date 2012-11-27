@@ -16,6 +16,16 @@
 //An array of characters that determine what salt to use.
 extern char salt_chars[];
 
+//Will contain a list of what ciphertext bits are found in registers and which must be found via
+//LDS/Shared memory.
+
+//Not actually used yet, this is something i'll be using the Nvidia cards when i get around to those
+//As those have too limited number of registers in their 2.x cards to just throw them all in there.
+extern char B_reg[];
+extern int cipher_registers;
+//CL source of the above, list of defines.
+extern char B_cl[];
+
 //Entry point for GPU searching hosts
 void *gpu_main(void *dummyarg /* Takes no argument */);
 

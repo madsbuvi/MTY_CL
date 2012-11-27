@@ -60,7 +60,7 @@
  xD89697CC = xFAB77A3F ^ x2221EDF3;\
  x20 = x7FA7FF69 & ~a2;\
  x21 = x20 ^ xD89697CC;\
- b(out3) = b(out3) ^ x21;\
+ out3 = out3 ^ x21;\
 \
  x05B77AC0 = x00FFFF00 ^ x054885C0;\
  x05F77AD6 = x00D20096 | x05B77AC0;\
@@ -69,7 +69,7 @@
  xBB0747B0 = xD89697CC ^ x6391D07C;\
  x00 = x25202160 | a2;\
  x01 = x00 ^ xBB0747B0;\
- b(out1) = b(out1) ^ x01;\
+ out1 = out1 ^ x01;\
 \
  x4C460000 = x3333FFFF ^ x7F75FFFF;\
  x4EDF9996 = x0AD99996 | x4C460000;\
@@ -78,7 +78,7 @@
  x96B1B65A = x2D4E49EA ^ xBBFFFFB0;\
  x10 = x4A01CC93 | a2;\
  x11 = x10 ^ x96B1B65A;\
- b(out2) = b(out2) ^ x11;\
+ out2 = out2 ^ x11;\
 \
  x5AFF5AFF = a5 | x5A0F5A0F;\
  x52B11215 = x5AFF5AFF & ~x2D4E49EA;\
@@ -86,7 +86,7 @@
  x10B0D205 = x52B11215 ^ x4201C010;\
  x30 = x10B0D205 | a2;\
  x31 = x30 ^ x0AD99996;\
- b(out4) = b(out4) ^ x31;\
+ out4 = out4 ^ x31;\
 }
 
 #define S2(out1,out2,out3,out4)\
@@ -126,7 +126,7 @@
  x9A646A95 = xA9A8AAA5 ^ x33CCC030;\
  x10 = a4 & ~x332200F0;\
  x11 = x10 ^ x9A646A95;\
- b(out2) = b(out2) ^ x11;\
+ out2 = out2 ^ x11;\
 \
  x00333303 = a2 & ~x33CCC030;\
  x118822B8 = x11BB11BB ^ x00333303;\
@@ -135,7 +135,7 @@
  x94E34B39 = xA8208805 ^ x3CC3C33C;\
  x00 = x33BB33FF & ~a4;\
  x01 = x00 ^ x94E34B39;\
- b(out1) = b(out1) ^ x01;\
+ out1 = out1 ^ x01;\
 \
  x0331330C = x0302000F ^ x00333303;\
  x3FF3F33C = x3CC3C33C | x0331330C;\
@@ -150,14 +150,14 @@
  x1A45324F = x29850143 ^ x33C0330C;\
  x20 = x1A45324F | a4;\
  x21 = x20 ^ x962CAC53;\
- b(out3) = b(out3) ^ x21;\
+ out3 = out3 ^ x21;\
 \
  x0A451047 = x1A45324F & ~x118822B8;\
  xBBDFDD7B = x33CCCC33 | xA9DF596A;\
  xB19ACD3C = x0A451047 ^ xBBDFDD7B;\
  x30 = x003311BB | a4;\
  x31 = x30 ^ xB19ACD3C;\
- b(out4) = b(out4) ^ x31;\
+ out4 = out4 ^ x31;\
 }
 
 #define S3(out1,out2,out3,out4)\
@@ -187,7 +187,7 @@
  x3C699796 = x3C3CC3C3 ^ x00555455;\
  x30 = x4FE55EF4 & ~a5;\
  x31 = x30 ^ x3C699796;\
- b(out4) = b(out4) ^ x31;\
+ out4 = out4 ^ x31;\
  x000FF000 = x0F0FF0F0 & x00FFFF00;\
  x55AA55AA = a1 ^ a4;\
  x26D9A15E = x7373F4F4 ^ x55AA55AA;\
@@ -204,7 +204,7 @@
  x4969967A = a1 ^ x1C3CC32F;\
  x10 = x2FD00F5F & a5;\
  x11 = x10 ^ x4969967A;\
- b(out2) = b(out2) ^ x11;\
+ out2 = out2 ^ x11;\
  x3F3F3F3F = a2 | a3;\
  xB01AA10B = ~x4FE55EF4;\
  xBF3FBF3F = x3F3F3F3F | xB01AA10B;\
@@ -212,7 +212,7 @@
  xD6A98356 = x55AAFFAA ^ x83037CFC;\
  x00 = a5 & ~x0C840A00;\
  x01 = x00 ^ xD6A98356;\
- b(out1) = b(out1) ^ x01;\
+ out1 = out1 ^ x01;\
  x001A000B = a4 & xB01AA10B;\
  x3C73979D = x3C699796 ^ x001A000B;\
  xBF73FFFD = x83037CFC | x3C73979D;\
@@ -220,7 +220,7 @@
  xB25E2DC3 = xBF73FFFD ^ x0D2DD23E;\
  x20 = x284100D8 | a5;\
  x21 = x20 ^ xB25E2DC3;\
- b(out3) = b(out3) ^ x21;\
+ out3 = out3 ^ x21;\
 }
 
 #define S4(out1,out2,out3,out4)\
@@ -254,21 +254,21 @@
  x56E9861E = x52FBCA0F ^ x04124C11;\
  x00 = a6 & ~x3C90B3D6;\
  x01 = x00 ^ x56E9861E;\
- b(out1) = b(out1) ^ x01;\
+ out1 = out1 ^ x01;\
  xA91679E1 = ~x56E9861E;\
  x10 = x3C90B3D6 & ~a6;\
  x11 = x10 ^ xA91679E1;\
- b(out2) = b(out2) ^ x11;\
+ out2 = out2 ^ x11;\
  x9586CA37 = x3C90B3D6 ^ xA91679E1;\
  x8402C833 = x9586CA37 & ~x33CC33CC;\
  x84C2C83F = x00C0C03C | x8402C833;\
  xB35C94A6 = x379E5C99 ^ x84C2C83F;\
  x20 = x61C8F93C | a6;\
  x21 = x20 ^ xB35C94A6;\
- b(out3) = b(out3) ^ x21;\
+ out3 = out3 ^ x21;\
  x30 = a6 & x61C8F93C;\
  x31 = x30 ^ xB35C94A6;\
- b(out4) = b(out4) ^ x31;\
+ out4 = out4 ^ x31;\
 }
 #define S5(out1,out2,out3,out4)\
 {\
@@ -305,7 +305,7 @@
  xE97FB1FF = ~x16804E00;\
  x20 = xE97FB1FF & ~a2;\
  x21 = x20 ^ x5A19784B;\
- b(out3) = b(out3) ^ x21;\
+ out3 = out3 ^ x21;\
  x43403302 = x43433333 & ~x003B00F5;\
  x35CAED30 = x2A2A82A0 ^ x1FE06F90;\
  x37DEFFB7 = x271C52A7 | x35CAED30;\
@@ -318,21 +318,21 @@
  x4FC2FBC2 = x003B00F5 ^ x4FF9FB37;\
  x30 = x4FC2FBC2 & a2;\
  x31 = x30 ^ x271C52A7;\
- b(out4) = b(out4) ^ x31;\
+ out4 = out4 ^ x31;\
  x43E9BBC2 = x77777777 ^ x349ECCB5;\
  x16BCEE97 = a1 ^ x43E9BBC2;\
  x0F080B04 = a4 & x0FF8EB24;\
  x19B4E593 = x16BCEE97 ^ x0F080B04;\
  x00 = x0B01234A | a2;\
  x01 = x00 ^ x19B4E593;\
- b(out1) = b(out1) ^ x01;\
+ out1 = out1 ^ x01;\
  x5C5C5C5C = x1F1F6F6F ^ x43433333;\
  x4448184C = x5C5C5C5C & ~x19B4E593;\
  x2DDABE71 = x22225555 ^ x0FF8EB24;\
  x6992A63D = x4448184C ^ x2DDABE71;\
  x10 = x1F1F6F6F & a2;\
  x11 = x10 ^ x6992A63D;\
- b(out2) = b(out2) ^ x11;\
+ out2 = out2 ^ x11;\
 }
 #define S6(out1,out2,out3,out4)\
 {\
@@ -363,7 +363,7 @@
  x3A6522FF = x09030000 ^ x336622FF;\
  x30 = x3A6522FF & a4;\
  x31 = x30 ^ x59A31CE6;\
- b(out4) = b(out4) ^ x31;\
+ out4 = out4 ^ x31;\
  x484D494C = a2 ^ x7B7E7A7F;\
  x0000B6B3 = a6 & ~x484D494C;\
  x0F0FB9BC = a3 ^ x0000B6B3;\
@@ -379,7 +379,7 @@
  x1668B94B = x1E69B94B & ~x09030000;\
  x20 = x00220099 | a4;\
  x21 = x20 ^ x1668B94B;\
- b(out3) = b(out3) ^ x21;\
+ out3 = out3 ^ x21;\
  x3CB4DFD2 = x22DD6699 ^ x1E69B94B;\
  x004B002D = a5 & ~x3CB4DFD2;\
  x33363237 = x484D494C ^ x7B7B7B7B;\
@@ -387,7 +387,7 @@
  xCC82CDE5 = x004B002D ^ xCCC9CDC8;\
  x10 = xCC82CDE5 & ~a4;\
  x11 = x10 ^ x5EE1A479;\
- b(out2) = b(out2) ^ x11;\
+ out2 = out2 ^ x11;\
  x0055EEBB = a6 ^ x00551144;\
  x5A5AECE9 = a1 ^ x0F0FB9BC;\
  x0050ECA9 = x0055EEBB & x5A5AECE9;\
@@ -395,7 +395,7 @@
  xC59A2D67 = x0050ECA9 ^ xC5CAC1CE;\
  x00 = x0FFFB9FD & ~a4;\
  x01 = x00 ^ xC59A2D67;\
- b(out1) = b(out1) ^ x01;\
+ out1 = out1 ^ x01;\
 }
 
 #define S7(out1,out2,out3,out4)\
@@ -422,7 +422,7 @@
  x74878E78 = x7B777E77 ^ x0FF0F00F;\
  x30 = a1 & ~x00001841;\
  x31 = x30 ^ x74878E78;\
- b(out4) = b(out4) ^ x31;\
+ out4 = out4 ^ x31;\
  x003C003C = a5 & ~x3CC33CC3;\
  x5A7D5A7D = x5A555A55 | x003C003C;\
  x333300F0 = x00003CC3 ^ x33333C33;\
@@ -439,7 +439,7 @@
  x27FFCBCD = x0FFFC3CF ^ x28000802;\
  x20 = x27FFCBCD & a1;\
  x21 = x20 ^ x699C585B;\
- b(out3) = b(out3) ^ x21;\
+ out3 = out3 ^ x21;\
  x48444844 = x5A555A55 & ~a3;\
  x4FF4C8CC = x0FF0C0CC | x48444844;\
  x6F9C5F5B = x0F000F00 | x699C585B;\
@@ -451,14 +451,14 @@
  x4F9493BB = x4F944848 ^ x0000DBF3;\
  x00 = x4F9493BB & ~a1;\
  x01 = x00 ^ x694E5A8D;\
- b(out1) = b(out1) ^ x01;\
+ out1 = out1 ^ x01;\
  x00005151 = a2 & x0000DBF3;\
  x96B1A572 = ~x694E5A8D;\
  x96B1F423 = x00005151 ^ x96B1A572;\
  xD9256798 = x4F9493BB ^ x96B1F423;\
  x10 = x686B8385 | a1;\
  x11 = x10 ^ xD9256798;\
- b(out2) = b(out2) ^ x11;\
+ out2 = out2 ^ x11;\
 }
 
 #define S8(out1,out2,out3,out4)\
@@ -489,7 +489,7 @@
  xCB164CB3 = x0C0C0C0C ^ xC71A40BF;\
  x10 = x00515001 | a6;\
  x11 = x10 ^ xCB164CB3;\
- b(out2) = b(out2) ^ x11;\
+ out2 = out2 ^ x11;\
  xF429738C = a2 ^ xC71A40BF;\
  xC72970BC = x33000330 ^ xF429738C;\
  x9E4319E6 = a1 ^ xCB164CB3;\
@@ -501,19 +501,19 @@
  x693CD926 = xF77F3F3F ^ x9E43E619;\
  x20 = x30555745 & a6;\
  x21 = x20 ^ x693CD926;\
- b(out3) = b(out3) ^ x21;\
+ out3 = out3 ^ x21;\
  xF719A695 = x3030CFCF ^ xC729695A;\
  xF4FF73FF = a4 | xF429738C;\
  x03E6D56A = xF719A695 ^ xF4FF73FF;\
  x56B3803F = a1 ^ x03E6D56A;\
  x30 = x56B3803F & a6;\
  x31 = x30 ^ xC729695A;\
- b(out4) = b(out4) ^ x31;\
+ out4 = out4 ^ x31;\
  xF700A600 = xF719A695 & ~a4;\
  x61008000 = x693CD926 & xF700A600;\
  x03B7856B = x00515001 ^ x03E6D56A;\
  x62B7056B = x61008000 ^ x03B7856B;\
  x00 = x62B7056B | a6;\
  x01 = x00 ^ xC729695A;\
- b(out1) = b(out1) ^ x01;\
+ out1 = out1 ^ x01;\
 }

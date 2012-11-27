@@ -27,6 +27,13 @@
 void *dictpool,*wdk_pool,*wdw_pool;
 int32_t dictpool_size, wdksize, wdwsize, min_dictpool, n_dictpool;
 
+//Will contain a list of what ciphertext bits are found in registers and which must be found via
+//LDS/Shared memory.
+char B_reg[64];
+int cipher_registers;
+//CL source of the above, list of defines.
+char B_cl[2048];
+
 //generated
 char salt_chars[] =  ".............................................../0123456789ABCDEFGABCDEFGHIJKLMNOPQRSTUVWXYZabcdefabcdefghijklmnopqrstuvwxyz.....................................................................................................................................";
 
@@ -102,6 +109,10 @@ void reset_salt(char *E){
 	}
 }
 
+int is_register(int cipher_bit){
+	return 1;
+}
+
 void cl_set_salt(uint8_t *salt_in, char *E_cl)
 {
 	char E[96];
@@ -129,7 +140,7 @@ void cl_set_salt(uint8_t *salt_in, char *E_cl)
 	
 	//Update the opencl source code
 	for(i=0; i<96; i++){
-		E_cl += sprintf(E_cl, "#define e%d %d\n",i,E[i]);
+		E_cl += sprintf(E_cl, "#define e%d b%d\n",i,E[i]);
 	}
 }
 
@@ -166,6 +177,15 @@ void examine(uint32_t hits, char *key, char last_char, int hits_index, const uin
 	}
 }
 
+void cl_setup_shared_key(uint8_t *key, char *cl){
+	int i,j;
+	for(i = 0; i < 8; i++){
+		for(j = 0; j < 7; j++){
+			cl += sprintf(cl, "#define k%d %s\n", i*7+j, (key[i]&(1<<j))?"0xffffffff":"0");
+		}
+	}
+}
+
 #define ASCII_MAX_VAL 125
 #define ASCII_MIN_VAL 36
 #define BATCH_SIZE (ASCII_MAX_VAL - ASCII_MIN_VAL + 1)
@@ -174,6 +194,11 @@ void examine(uint32_t hits, char *key, char last_char, int hits_index, const uin
  * Infinitely searches random ASCII keys
  */
 int do_search(uint8_t *salt, int gpu){
+	uint8_t shared_key[8] = {0,0,0,0,0,0,0,0};
+	random_string(shared_key,8);
+	shared_key[1] = salt[0];
+	shared_key[2] = salt[1];
+	
    /*
      * Set-up OpenCL
      */
@@ -182,8 +207,12 @@ int do_search(uint8_t *salt, int gpu){
 	//hardcode it and recompile when it needs to change.
 	//So long as recompilation is rare enough, this is rewarding depsite the need for recompilation.
 	char E_cl[2048];
-
 	cl_set_salt(salt, E_cl);
+	
+	//Will contain the bits of a shared key
+	char K_cl[2048];
+	cl_setup_shared_key(shared_key, K_cl);
+
     cl_device_id device_id = NULL;
 	cl_context context = NULL;
 	cl_command_queue command_queue = NULL;
@@ -194,8 +223,8 @@ int do_search(uint8_t *salt, int gpu){
 	cl_kernel inc_kernel = NULL;
 	cl_int ret;
 
-	char *source_crypt, *source_sboxdef, *source_cmp;
-	size_t len_crypt, len_sboxdef, len_cmp, len_wdict_config;
+	char *source_crypt, *source_sboxdef, *source_cmp,  *source_des;
+	size_t len_crypt, len_sboxdef, len_cmp, len_wdict_config, len_des;
 	int32_t a,b,c;
 
 					
@@ -211,17 +240,22 @@ int do_search(uint8_t *salt, int gpu){
 	source_crypt = (char *)readFile("./gpu.cl",&len_crypt);
 	source_sboxdef = (char *)readFile("./sboxdef.cl", &len_sboxdef);
 	source_cmp = (char *)readFile("./cmp.cl", &len_cmp);
+	source_des = (char *)readFile("./des.cl", &len_des);
 	assert(source_crypt!=NULL /* reading gpu source code failed */);
 	assert(len_crypt>0 /* gpu source was 0 characters long */);
 	assert(source_sboxdef!=NULL /* reading gpu source code failed */);
 	assert(len_sboxdef>0 /* gpu source was 0 characters long */);
+	assert(source_cmp!=NULL /* reading cmp source code failed */);
+	assert(len_cmp>0 /* cmp source was 0 characters long */);
+	assert(source_des!=NULL /* reading des source code failed */);
+	assert(len_des>0 /* des source was 0 characters long */);
 
 	/* Get Platform and Device Info */
 	init_cl_gpu_specific(gpu, &device_id, &context, & command_queue);
 
 	/* Create Kernel Program from the source */
-	const char *sources[] = {E_cl, wdict_config, source_sboxdef, source_cmp, source_crypt};
-	const size_t lengths[] = {strlen(E_cl), len_wdict_config, len_sboxdef, len_cmp, len_crypt};
+	const char *sources[] = {K_cl, E_cl, source_des, wdict_config, source_sboxdef, source_cmp, source_crypt};
+	const size_t lengths[] = {strlen(K_cl), strlen(E_cl), len_des, len_wdict_config, len_sboxdef, len_cmp, len_crypt};
 
 	HandleErrorPar(program = clCreateProgramWithSource(context, sizeof(lengths)/sizeof(const size_t), sources,
 	lengths, HANDLE_ERROR));
@@ -250,8 +284,9 @@ int do_search(uint8_t *salt, int gpu){
 	HandleErrorRet(clGetDeviceInfo ( device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_work_group_size), &max_work_group_size, NULL));
 
 	/* Prepare test launch */
-	uint32_t n = max_compute_units * max_work_group_size;
 	uint32_t work_group_size = 128;
+	uint32_t n = max_compute_units * work_group_size * 2;
+	
 	
 	//host-side buffers for key structures.
 	uint32_t *keys, *keys_coalesced, *key_end,
@@ -313,7 +348,9 @@ int do_search(uint8_t *salt, int gpu){
 
     /* Execute */
 	int length = 5; //do a few batches with the same salt to completely hide setup time.
+	
     for(a=0; a<length; a++){
+		
         uint8_t key[n*32][8];
 		
         memset(keys,0,keys_size);
@@ -321,6 +358,7 @@ int do_search(uint8_t *salt, int gpu){
 		
 		for(b=0; b<n*32; b++){
 			random_string(key[b], 6);
+			key[b][0] = shared_key[0];
 			key[b][1] = salt[0];
 			key[b][2] = salt[1];
 			set_key_line(keys+((b/32)*56),key[b],b%32,6);
@@ -384,9 +422,26 @@ int do_search(uint8_t *salt, int gpu){
     return 0;
 }
 
+void cl_configure_b(char *regs, char *cl){
+	//Should probably make some benchmark to determine how many registers to use...
+	int regcount = 64;
+	int i = 0;
+	for(; i < 64; i++){
+		regs[i] = i < regcount;
+		if(regs[i]){
+			cl += sprintf(cl, "#define b%d b(%d)\n",i,i);
+		}
+		else{
+			cl += sprintf(cl, "#define b%d lb(%d)\n",i,i-regcount);
+		}
+	}
+	
+	cipher_registers = regcount;
+}
+
 int gpu_init(){
     srand(time(NULL));
-	
+	cl_configure_b(B_reg, B_cl);
 	wdict_setup_gpu(&dictpool, &wdk_pool, &wdw_pool,
 					&dictpool_size, &wdksize, &wdwsize,
 					&min_dictpool, &n_dictpool);
@@ -395,7 +450,6 @@ int gpu_init(){
 }
 
 void *gpu_main(void *dummyarg /* Takes no argument */){
-
 	int gpu = register_gpu();
     while(1){
 		uint8_t salt[3];

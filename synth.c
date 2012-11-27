@@ -150,8 +150,8 @@ reg_mem_cl(unsigned op,
 	case OP_MOV:
 		//d = i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = b(%d); \\\n", d, (ofs/16)+16);break;
-			case PTR_RL:len = sprintf(buffer, "x%d = b(%d); \\\n", d, (ofs/16)+48);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs/16)+16);break;
+			case PTR_RL:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs/16)+48);break;
 			case PTR_H: len = sprintf(buffer, "x%d = %s(%d); \\\n", d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
 			default: 	len = sprintf(buffer, "x%d = p%d[%d]; \\\n", d, i, ofs/16);break;
 		}
@@ -159,7 +159,7 @@ reg_mem_cl(unsigned op,
 	case OP_STOR:
 		//i[ofs] = d
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "b(%d) = x%d; \\\n", ofs/16, d);break;
+			case PTR_LR:len = sprintf(buffer, "b%d = x%d; \\\n", ofs/16, d);break;
 			case PTR_H: len = sprintf(buffer, "%s(%d) = x%d; \\\n", (ofs/16)<64?"work_area":"gwork_area", ofs/16,d);break;
 			default: 	len = sprintf(buffer, "p%d[%d] = x%d; \\\n", i, ofs/16, d);break;
 		}
@@ -167,7 +167,7 @@ reg_mem_cl(unsigned op,
 	case OP_AND:
 		//d = d&i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = x%d&b(%d); \\\n", d, d, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = x%d&b%d; \\\n", d, d, ofs/16);break;
 			case PTR_H: len = sprintf(buffer, "x%d = x%d&%s(%d); \\\n", d, d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
 			default: 	len = sprintf(buffer, "x%d = x%d&p%d[%d]; \\\n", d, d, i, ofs/16);break;
 		}
@@ -175,7 +175,7 @@ reg_mem_cl(unsigned op,
 	case OP_OR:
 		//d = d|i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = x%d|b(%d); \\\n", d, d, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = x%d|b%d; \\\n", d, d, ofs/16);break;
 			case PTR_H: len = sprintf(buffer, "x%d = x%d|%s(%d); \\\n", d, d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
 			default: 	len = sprintf(buffer, "x%d = x%d|p%d[%d]; \\\n", d, d, i, ofs/16);break;
 		}
@@ -304,8 +304,8 @@ reg_mem_cl(unsigned op,
 	case OP_MOV:
 		//d = i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = b(%d); \\\n", d, (ofs/16)+16);break;
-			case PTR_RL:len = sprintf(buffer, "x%d = b(%d); \\\n", d, (ofs/16)+48);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs/16)+16);break;
+			case PTR_RL:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs/16)+48);break;
 			case PTR_H: len = sprintf(buffer, "x%d = %s(%d); \\\n", d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
 			default: 	len = sprintf(buffer, "x%d = p%d[%d]; \\\n", d, i, ofs/16);break;
 		}
@@ -313,7 +313,7 @@ reg_mem_cl(unsigned op,
 	case OP_STOR:
 		//i[ofs] = d
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "b(%d) = x%d; \\\n", ofs/16, d);break;
+			case PTR_LR:len = sprintf(buffer, "b%d = x%d; \\\n", ofs/16, d);break;
 			case PTR_H: len = sprintf(buffer, "%s(%d) = x%d; \\\n", (ofs/16)<64?"work_area":"gwork_area", ofs/16,d);break;
 			default: 	len = sprintf(buffer, "p%d[%d] = x%d; \\\n", i, ofs/16, d);break;
 		}
@@ -321,7 +321,7 @@ reg_mem_cl(unsigned op,
 	case OP_AND:
 		//d = d&i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = x%d&b(%d); \\\n", d, d, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = x%d&b%d; \\\n", d, d, ofs/16);break;
 			case PTR_H: len = sprintf(buffer, "x%d = x%d&%s(%d); \\\n", d, d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
 			default: 	len = sprintf(buffer, "x%d = x%d&p%d[%d]; \\\n", d, d, i, ofs/16);break;
 		}
@@ -329,7 +329,7 @@ reg_mem_cl(unsigned op,
 	case OP_OR:
 		//d = d|i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = x%d|b(%d); \\\n", d, d, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = x%d|b%d; \\\n", d, d, ofs/16);break;
 			case PTR_H: len = sprintf(buffer, "x%d = x%d|%s(%d); \\\n", d, d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
 			default: 	len = sprintf(buffer, "x%d = x%d|p%d[%d]; \\\n", d, d, i, ofs/16);break;
 		}

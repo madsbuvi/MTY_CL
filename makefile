@@ -50,6 +50,7 @@ $(GUI_TARG)	: $(GUI_OBJS)
 $(TARG)	: $(OBJS)
 	$(CC) $(CFLAGS) $(DEFS) -o $(TARG) $(OBJS) $(LFLAGS)
 	strip $(TARG)
+	editbin /STACK:33554432 $(TARG)
 
 clean	:
 	rm -f $(OBJS) $(TARG) $(GUI_OBJS) $(GUI_TARG) *.bak $(SCAN).c $(PARSE).c

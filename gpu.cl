@@ -223,33 +223,21 @@ __constant uint32_t testtrip[8] = {
 #endif
 /*
  * defines to save typing and make kernel code more readable
- * note the coalesced memory access
  */
 #define key(x) keys[(x)*size+index]
 #define lk(x)  lkeys[(x)*lsize]
 #define gb(x) blocks[(x)*size+index]
 #define lb(x) lblock[(x)*lsize + lindex]
 #define rb(x) rblock[(x)*lsize]
-#define b(x) pblock[x]
 #define work_area(x) lmem[(x)*lsize+lindex]
 #define gwork_area(x) gwa[(x)*size+index]
 
-#define xor_D(k1,b1,b2,b3,b4,b5,b6)\
-a1 = k(k1+0)^b(b1);\
-a2 = k(k1+1)^b(b2);\
-a3 = k(k1+2)^b(b3);\
-a4 = k(k1+3)^b(b4);\
-a5 = k(k1+4)^b(b5);\
-a6 = k(k1+5)^b(b6);
-
-#define xor_E(k1,b1,b2,b3,b4,b5,b6)\
-kp = vload2(k1/6,lkeyperm);\
-a1 = lk(kp.x&0xff)^b(b1);\
-a2 = lk((kp.x>>8)&0xff)^b(b2);\
-a3 = lk((kp.x>>16))^b(b3);\
-a4 = lk(kp.y&0xff)^b(b4);\
-a5 = lk((kp.y>>8)&0xff)^b(b5);\
-a6 = lk((kp.y>>16))^b(b6);
+#define SWAP(a,b) \
+{ \
+	type swap = a; \
+	a = b; \
+	b = swap; \
+}
 
 __kernel void store_hit(
 						__global type *key_end,
@@ -270,7 +258,7 @@ __kernel void store_hit(
 	hits[BATCH_SIZE*index+key_end[0]-ASCII_MIN_VAL] |= 1<<slice_index;
 	
 #if debugprints
-	printf("/**********************************\n************* HIT *****************\n*************************************/\nHit was AMD in slice %d\n",slice_index);
+	printf("/**********************************\n************* HIT *****************\n*************************************/\nHit was made in slice %d\n",slice_index);
 	printf("Key end is values: %d %d\n",key_end[1], key_end[0]);
 	printf("Key end is ascii: %c %c\n",key_end[1], key_end[0]);
 	printf("I wrote it to hits index %d\n",BATCH_SIZE*index+key_end[0]-ASCII_MIN_VAL);
@@ -342,7 +330,73 @@ __kernel void crypt25(__global type *keys,	//First 6 characters of each key
 
 									
 	//Keep block in registers while performing hash.
-    __private type pblock[66];
+    //__private type pblock[66];
+	type b0;
+	type b1;
+	type b2;
+	type b3;
+	type b4;
+	type b5;
+	type b6;
+	type b7;
+	type b8;
+	type b9;
+	type b10;
+	type b11;
+	type b12;
+	type b13;
+	type b14;
+	type b15;
+	type b16;
+	type b17;
+	type b18;
+	type b19;
+	type b20;
+	type b21;
+	type b22;
+	type b23;
+	type b24;
+	type b25;
+	type b26;
+	type b27;
+	type b28;
+	type b29;
+	type b30;
+	type b31;
+	type b32;
+	type b33;
+	type b34;
+	type b35;
+	type b36;
+	type b37;
+	type b38;
+	type b39;
+	type b40;
+	type b41;
+	type b42;
+	type b43;
+	type b44;
+	type b45;
+	type b46;
+	type b47;
+	type b48;
+	type b49;
+	type b50;
+	type b51;
+	type b52;
+	type b53;
+	type b54;
+	type b55;
+	type b56;
+	type b57;
+	type b58;
+	type b59;
+	type b60;
+	type b61;
+	type b62;
+	type b63;
+	
+	
 	
 	//Reserve ALL the shared memory for use by this block.
 	__local int lmem[0x2000];
@@ -351,117 +405,206 @@ __kernel void crypt25(__global type *keys,	//First 6 characters of each key
     __local int *lkeyperm = lmem;
 	
 	//Pointer to this thread's key slices.
-	__local type *lkeys = (__local type *)(lmem+0x100+lindex);
+	__local type *lkeys = (__local type *)(lmem+lindex);
 	
-    //Copy key expansion matrix to Local memory in a coalesced manner.
-    for(int i = 0; i < 0x100/lsize; i++){
-        int t = i*lsize+lindex;
-		//Pack values in key expansion matrix to save memory accesses (local memory is slower than advertised, apparently)
-        if(t<0x100)lkeyperm[t] = keyperm[t*3]|(keyperm[t*3+1]<<8)|(keyperm[t*3+2]<<16);
-    }
 
-#if asdasd
-	if(index==0){
 	//Copy key slices into Local memory.
-    for(int i = 0; i < 56; i++){
-		lk(i) = (testtrip[i/7]&(1<<(i%7)))?1:0;
-    }
-#else
-	//Copy key slices into Local memory.
-    for(int i = 0; i < 42; i++){
-        lk(i) = key(i);
+    for(int i = 0; i < 35; i++){
+        lk(i) = key(i+21);
     }
 	
 	//Copy common end of key into local memory
 	{
-		lk(42) = (key_end[1]&(1<<0))?0xffffffff:0;
-		lk(43) = (key_end[1]&(1<<1))?0xffffffff:0;
-		lk(44) = (key_end[1]&(1<<2))?0xffffffff:0;
-		lk(45) = (key_end[1]&(1<<3))?0xffffffff:0;
-		lk(46) = (key_end[1]&(1<<4))?0xffffffff:0;
-		lk(47) = (key_end[1]&(1<<5))?0xffffffff:0;
-		lk(48) = (key_end[1]&(1<<6))?0xffffffff:0;
-		lk(49) = (key_end[0]&(1<<0))?0xffffffff:0;
-		lk(50) = (key_end[0]&(1<<1))?0xffffffff:0;
-		lk(51) = (key_end[0]&(1<<2))?0xffffffff:0;
-		lk(52) = (key_end[0]&(1<<3))?0xffffffff:0;
-		lk(53) = (key_end[0]&(1<<4))?0xffffffff:0;
-		lk(54) = (key_end[0]&(1<<5))?0xffffffff:0;
-		lk(55) = (key_end[0]&(1<<6))?0xffffffff:0;
+		lk(21) = (key_end[1]&(1<<0))?0xffffffff:0;
+		lk(22) = (key_end[1]&(1<<1))?0xffffffff:0;
+		lk(23) = (key_end[1]&(1<<2))?0xffffffff:0;
+		lk(24) = (key_end[1]&(1<<3))?0xffffffff:0;
+		lk(25) = (key_end[1]&(1<<4))?0xffffffff:0;
+		lk(26) = (key_end[1]&(1<<5))?0xffffffff:0;
+		lk(27) = (key_end[1]&(1<<6))?0xffffffff:0;
+		lk(28) = (key_end[0]&(1<<0))?0xffffffff:0;
+		lk(29) = (key_end[0]&(1<<1))?0xffffffff:0;
+		lk(30) = (key_end[0]&(1<<2))?0xffffffff:0;
+		lk(31) = (key_end[0]&(1<<3))?0xffffffff:0;
+		lk(32) = (key_end[0]&(1<<4))?0xffffffff:0;
+		lk(33) = (key_end[0]&(1<<5))?0xffffffff:0;
+		lk(34) = (key_end[0]&(1<<6))?0xffffffff:0;
 	}
-#endif
     //Zero the blocks
-    for(int i = 0; i < 64; i++){
-        b(i) = 0;
-    }
-	
+	{
+		b0 = 0;
+		b1 = 0;
+		b2 = 0;
+		b3 = 0;
+		b4 = 0;
+		b5 = 0;
+		b6 = 0;
+		b7 = 0;
+		b8 = 0;
+		b9 = 0;
+		b10 = 0;
+		b11 = 0;
+		b12 = 0;
+		b13 = 0;
+		b14 = 0;
+		b15 = 0;
+		b16 = 0;
+		b17 = 0;
+		b18 = 0;
+		b19 = 0;
+		b20 = 0;
+		b21 = 0;
+		b22 = 0;
+		b23 = 0;
+		b24 = 0;
+		b25 = 0;
+		b26 = 0;
+		b27 = 0;
+		b28 = 0;
+		b29 = 0;
+		b30 = 0;
+		b31 = 0;
+		b32 = 0;
+		b33 = 0;
+		b34 = 0;
+		b35 = 0;
+		b36 = 0;
+		b37 = 0;
+		b38 = 0;
+		b39 = 0;
+		b40 = 0;
+		b41 = 0;
+		b42 = 0;
+		b43 = 0;
+		b44 = 0;
+		b45 = 0;
+		b46 = 0;
+		b47 = 0;
+		b48 = 0;
+		b49 = 0;
+		b50 = 0;
+		b51 = 0;
+		b52 = 0;
+		b53 = 0;
+		b54 = 0;
+		b55 = 0;
+		b56 = 0;
+		b57 = 0;
+		b58 = 0;
+		b59 = 0;
+		b60 = 0;
+		b61 = 0;
+		b62 = 0;
+		b63 = 0;
+	}
 	//Perform the DES algorithm
-	int2 kp = 0;
-	int iterations = 25;
-	int rounds_and_swapped = 8;
-	int go = 1;
 	type a1=0, a2=0, a3=0, a4=0, a5=0, a6=0;
 	barrier(CLK_LOCAL_MEM_FENCE);
-	while(go){
-        xor_E(0, e0, e1, e2, e3, e4, e5)
-        S1(40, 48, 54, 62)
-        xor_E(6, e6, e7, e8, e9, e10, e11)
-        S2(44, 59, 33, 49)
-        xor_E(12,e12, e13, e14, e15, e16, e17)
-        S3(55, 47, 61, 37)
-        xor_E(18, e18, e19, e20, e21, e22, e23)
-        S4(57, 51, 41, 32)
-        xor_E(24, e24, e25, e26, e27, e28, e29)
-        S5(39, 45, 56, 34)
-        xor_E(30, e30, e31, e32, e33, e34, e35)
-        S6(35, 60, 42, 50)
-        xor_E(36, e36, e37, e38, e39, e40, e41)
-        S7(63, 43, 53, 38)
-        xor_E(42, e42, e43, e44, e45, e46, e47)
-        S8(36, 58, 46, 52)
-
-		if (rounds_and_swapped != 0x100){
-			while(1){
-
-                xor_E(48, e48, e49, e50, e51, e52, e53)
-                S1(8, 16, 22, 30)
-                xor_E(54, e54, e55, e56, e57, e58, e59)
-                S2(12, 27, 1, 17)
-                xor_E(60, e60, e61, e62, e63, e64, e65)
-                S3(23, 15, 29, 5)
-                xor_E(66, e66, e67, e68, e69, e70, e71)
-                S4(25, 19, 9, 0)
-                xor_E(72, e72, e73, e74, e75, e76, e77)
-                S5(7, 13, 24, 2)
-                xor_E(78, e78, e79, e80, e81, e82, e83)
-                S6(3, 28, 10, 18)
-                xor_E(84, e84, e85, e86, e87, e88, e89)
-                S7(31, 11, 21, 6)
-                xor_E(90, e90, e91, e92, e93, e94, e95)
-                S8(4, 26, 14, 20)
-
-				lkeyperm += 32;
-				if (--rounds_and_swapped)break;
-				lkeyperm -= (0x300 + 48)/3;
-				rounds_and_swapped = 0x108;
-				if (--iterations)continue;
-				go=0;break;
-			}
-		}
-		else{
-			lkeyperm -= (0x300 - 48)/3;
-			rounds_and_swapped = 8;
-			iterations--;
-		}
+	int iterations = 25;
+	while(iterations--){
+		SWAP(b0,b32);
+		SWAP(b1,b33);
+		SWAP(b2,b34);
+		SWAP(b3,b35);
+		SWAP(b4,b36);
+		SWAP(b5,b37);
+		SWAP(b6,b38);
+		SWAP(b7,b39);
+		SWAP(b8,b40);
+		SWAP(b9,b41);
+		SWAP(b10,b42);
+		SWAP(b11,b43);
+		SWAP(b12,b44);
+		SWAP(b13,b45);
+		SWAP(b14,b46);
+		SWAP(b15,b47);
+		SWAP(b16,b48);
+		SWAP(b17,b49);
+		SWAP(b18,b50);
+		SWAP(b19,b51);
+		SWAP(b20,b52);
+		SWAP(b21,b53);
+		SWAP(b22,b54);
+		SWAP(b23,b55);
+		SWAP(b24,b56);
+		SWAP(b25,b57);
+		SWAP(b26,b58);
+		SWAP(b27,b59);
+		SWAP(b28,b60);
+		SWAP(b29,b61);
+		SWAP(b30,b62);
+		SWAP(b31,b63);
+		DES
 	}
+	
 	//Back-up blocks
+	{
+		gb(0) = b0;
+		gb(1) = b1;
+		gb(2) = b2;
+		gb(3) = b3;
+		gb(4) = b4;
+		gb(5) = b5;
+		gb(6) = b6;
+		gb(7) = b7;
+		gb(8) = b8;
+		gb(9) = b9;
+		gb(10) = b10;
+		gb(11) = b11;
+		gb(12) = b12;
+		gb(13) = b13;
+		gb(14) = b14;
+		gb(15) = b15;
+		gb(16) = b16;
+		gb(17) = b17;
+		gb(18) = b18;
+		gb(19) = b19;
+		gb(20) = b20;
+		gb(21) = b21;
+		gb(22) = b22;
+		gb(23) = b23;
+		gb(24) = b24;
+		gb(25) = b25;
+		gb(26) = b26;
+		gb(27) = b27;
+		gb(28) = b28;
+		gb(29) = b29;
+		gb(30) = b30;
+		gb(31) = b31;
+		gb(32) = b32;
+		gb(33) = b33;
+		gb(34) = b34;
+		gb(35) = b35;
+		gb(36) = b36;
+		gb(37) = b37;
+		gb(38) = b38;
+		gb(39) = b39;
+		gb(40) = b40;
+		gb(41) = b41;
+		gb(42) = b42;
+		gb(43) = b43;
+		gb(44) = b44;
+		gb(45) = b45;
+		gb(46) = b46;
+		gb(47) = b47;
+		gb(48) = b48;
+		gb(49) = b49;
+		gb(50) = b50;
+		gb(51) = b51;
+		gb(52) = b52;
+		gb(53) = b53;
+		gb(54) = b54;
+		gb(55) = b55;
+		gb(56) = b56;
+		gb(57) = b57;
+		gb(58) = b58;
+		gb(59) = b59;
+		gb(60) = b60;
+		gb(61) = b61;
+		gb(62) = b62;
+		gb(63) = b63;
+	}
 
-    for(int i = 0; i < 64; i++){
-        gb(i) = b(i);
-    }
-	/*
-	 * Runtime host code will insert code running a preliminary comparison based on Quine-McCluskey's method here.
-	 */
 	 barrier(CLK_LOCAL_MEM_FENCE);
 	 type x0,x1;
 	{
@@ -569,21 +712,13 @@ __kernel void crypt25(__global type *keys,	//First 6 characters of each key
 			IK^=IC;
 		}
 		IC >>= 1;
-	}/*
-	printf("Trips:\n");
-	for(int j=0; j<32;j++){
-		printf("%d: ",j);
-		uint64_t faggot = lb(j);
-		for(int i=0; i<10; i++){
-			printf("%c",tr_sub[(faggot>>(6*i))&63]);
-		}
-		printf("\n");
-	}*/
+	}
 	//Move potential finds to appear sequentially from the start
 	//preventing the search loop from going serial
 	int potential_finds = 0;
 	//potential finds are stored in Local memory, but are also
 	//paired together with their old index which will be needed~
+	
 	for(type i = 0; i < 8*sizeof(type); i++){
 		if(x0&((type)1<<i)){
 			if(x1&((type)1<<i)){
@@ -595,7 +730,7 @@ __kernel void crypt25(__global type *keys,	//First 6 characters of each key
 				
 #if debugprints
 if(*hit_bool)continue;
-	printf("POTENTIAL Hit was AMD in slice %d\n",i);
+	printf("POTENTIAL Hit was made in slice %d\n",i);
 	printf("Key end is ascii: %c %c\n",key_end[1], key_end[0]);
 	printf("Trips:\n");
 	for(int j=0; j<32;j++){
@@ -628,6 +763,7 @@ if(*hit_bool)continue;
 			}	
 		}
 	}
+	
 	//Search for hits in the dictionary.
 	for(potential_finds--;potential_finds>=0;potential_finds--){
 		uint64_t item = lb(potential_finds);
@@ -731,8 +867,7 @@ if(*hit_bool)continue;
 			}
 		}
 	}
-	#if asdasd
-	}
+	#if 0
 	#endif
 }
 
