@@ -390,7 +390,6 @@ static
 NORETURN
 thread_crypt64_new(void *a_param)
 {
-return;
 	struct THREAD_PARAM *param = a_param;
 	CODE_T *code = param->code;
 	CODE_T *cmp = code + param->code_cmp;
@@ -456,7 +455,6 @@ set_start_time(){
 
 static void
 initialize_gpu_searcher(pthread_t *gpu_handler){
-	fprintf(stderr,"%I64u\n",usec());
 	int num_devices = gpu_init(usec());
 	fprintf(stderr,"Number of GPUs detected: %d\n",num_devices);
 	int i = 0;

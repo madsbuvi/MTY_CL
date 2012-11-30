@@ -224,8 +224,6 @@ int do_search(int gpu){
 	cl_set_salt(salt, E_cl);
 	cl_setup_shared_key(shared_key, K_cl);
 	
-	printf("Shared key is %x %x %x\n", shared_key[0].key, shared_key[1].key, shared_key[2].key);
-	
 	len_wdict_config = sprintf(wdict_config,
 			"#define MIN_DICTPOOL %d\n"
 			"#define N_DICTPOOL %d\n"
@@ -451,10 +449,8 @@ int gpu_init(uint32_t seed){
 
 void *gpu_main(void *dummyarg /* Takes no argument */){
 	int gpu = register_gpu();
-	printf("dk size: %i64u\n",wdksize);
     while(1){
 		do_search(gpu);
-		
 	}
     return NULL;
 }
