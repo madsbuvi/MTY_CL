@@ -21,7 +21,7 @@ DEFS += -finput-charset=cp932 -fexec-charset=cp932
 GUI_TARG = mty_gui.exe
 GUI_OBJS = mty_gui.o util.o
 TARG = mty_cl.exe
-OBJS = mty.o crypt64.o cp932.o desconst.o dt4.o scoreboard.o synth.o translate.o expr_parse.o tr64_mmx.o wdict.o simplify.o key.o log.o hit.o mty_cl.o cl_util.o crypt3.o des_std.o
+OBJS = mty.o crypt64.o cp932.o desconst.o dt4.o scoreboard.o synth.o translate.o expr_parse.o tr64_mmx.o wdict.o simplify.o key.o log.o hit.o mty_cl.o cl_util.o crypt3.o des_std.o key_cl.o
 PARSE = expr_parse
 SCAN = expr_scan
 

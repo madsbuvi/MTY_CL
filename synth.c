@@ -30,13 +30,45 @@
 /* 連モノ ad hoc */
 #define SEQ	8
 
+//cmp.cl
 FILE *clfp;
+
+#define work_area_size 128
+
+static int greatest_work_area_used = 0;
+
 
 static int g_tn = HIT_BOOL + 1;	/* hit[] インデクス */
 
 /* キャラクタ毎LRインデクス */
 static int n_lrq[11];
 static struct ITREE **lrq[11];
+
+
+// Variable declarations for opencl code
+void cl_declare_regs(const char *base_name, int count){
+	assert(base_name != NULL);
+	if(!count)return;
+	char buffer[2048];
+	int len = sprintf(buffer, "type %s0",base_name);
+	fwrite(buffer, 1, len, clfp);
+	int i;
+	for(i = 1; i < count; i++){
+		len = sprintf(buffer, ", %s%d",base_name, i);
+		fwrite(buffer, 1, len, clfp);
+	}
+	len = sprintf(buffer, "; \\\n",base_name, i);
+	fwrite(buffer, 1, len, clfp);
+}
+
+cl_save_work_area(){
+	int i = 0;
+	char buffer[2048];
+	for(; i <= greatest_work_area_used; i++){
+		int len = sprintf(buffer, "gwork_area( %d ) = work%d; \\\n", i, i);
+		fwrite(buffer, 1, len, clfp);
+	}
+}
 
 /***************************************************************
  *
@@ -146,38 +178,48 @@ reg_mem_cl(unsigned op,
 	assert(clfp != NULL);
 	static char buffer[512];
 	unsigned len = 0;
+	
+	ofs/=16;
+	
+	const char wa[128];
+	if(ofs<work_area_size){
+		sprintf(wa, "work%d",ofs);
+	}else{
+		sprintf(wa, "gwork_area( %d )",ofs);
+	}
+	
 	switch(op){
 	case OP_MOV:
 		//d = i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs/16)+16);break;
-			case PTR_RL:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs/16)+48);break;
-			case PTR_H: len = sprintf(buffer, "x%d = %s(%d); \\\n", d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
-			default: 	len = sprintf(buffer, "x%d = p%d[%d]; \\\n", d, i, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs)+16);break;
+			case PTR_RL:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs)+48);break;
+			case PTR_H: len = sprintf(buffer, "x%d = %s; \\\n", d, wa); greatest_work_area_used = max(greatest_work_area_used,ofs); break;
+			default: 	len = sprintf(buffer, "x%d = p%d[%d]; \\\n", d, i, ofs);break;
 		}
 		break;
 	case OP_STOR:
 		//i[ofs] = d
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "b%d = x%d; \\\n", ofs/16, d);break;
-			case PTR_H: len = sprintf(buffer, "%s(%d) = x%d; \\\n", (ofs/16)<64?"work_area":"gwork_area", ofs/16,d);break;
-			default: 	len = sprintf(buffer, "p%d[%d] = x%d; \\\n", i, ofs/16, d);break;
+			case PTR_LR:len = sprintf(buffer, "b%d = x%d; \\\n", ofs, d);break;
+			case PTR_H: len = sprintf(buffer, "%s = x%d; \\\n", wa, d); greatest_work_area_used = max(greatest_work_area_used,ofs); break;
+			default: 	len = sprintf(buffer, "p%d[%d] = x%d; \\\n", i, ofs, d);break;
 		}
 		break;
 	case OP_AND:
 		//d = d&i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = x%d&b%d; \\\n", d, d, ofs/16);break;
-			case PTR_H: len = sprintf(buffer, "x%d = x%d&%s(%d); \\\n", d, d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
-			default: 	len = sprintf(buffer, "x%d = x%d&p%d[%d]; \\\n", d, d, i, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = x%d&b%d; \\\n", d, d, ofs);break;
+			case PTR_H: len = sprintf(buffer, "x%d = x%d&%s; \\\n", d, d, wa); greatest_work_area_used = max(greatest_work_area_used,ofs); break;
+			default: 	len = sprintf(buffer, "x%d = x%d&p%d[%d]; \\\n", d, d, i, ofs);break;
 		}
 		break;
 	case OP_OR:
 		//d = d|i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = x%d|b%d; \\\n", d, d, ofs/16);break;
-			case PTR_H: len = sprintf(buffer, "x%d = x%d|%s(%d); \\\n", d, d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
-			default: 	len = sprintf(buffer, "x%d = x%d|p%d[%d]; \\\n", d, d, i, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = x%d|b%d; \\\n", d, d, ofs);break;
+			case PTR_H: len = sprintf(buffer, "x%d = x%d|%s; \\\n", d, d, wa); greatest_work_area_used = max(greatest_work_area_used,ofs);break;
+			default: 	len = sprintf(buffer, "x%d = x%d|p%d[%d]; \\\n", d, d, i, ofs);break;
 		}
 		break;
 	case OP_XOR:
@@ -300,38 +342,48 @@ reg_mem_cl(unsigned op,
 	assert(clfp != NULL);
 	static char buffer[512];
 	unsigned len = 0;
+	
+	ofs/=16;
+	
+	const char wa[128];
+	if(ofs<work_area_size){
+		sprintf(wa, "work%d",ofs);
+	}else{
+		sprintf(wa, "gwork_area( %d )",ofs);
+	}
+	
 	switch(op){
 	case OP_MOV:
 		//d = i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs/16)+16);break;
-			case PTR_RL:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs/16)+48);break;
-			case PTR_H: len = sprintf(buffer, "x%d = %s(%d); \\\n", d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
-			default: 	len = sprintf(buffer, "x%d = p%d[%d]; \\\n", d, i, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs)+16);break;
+			case PTR_RL:len = sprintf(buffer, "x%d = b%d; \\\n", d, (ofs)+48);break;
+			case PTR_H: len = sprintf(buffer, "x%d = %s; \\\n", d, wa);break;
+			default: 	len = sprintf(buffer, "x%d = p%d[%d]; \\\n", d, i, ofs);break;
 		}
 		break;
 	case OP_STOR:
 		//i[ofs] = d
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "b%d = x%d; \\\n", ofs/16, d);break;
-			case PTR_H: len = sprintf(buffer, "%s(%d) = x%d; \\\n", (ofs/16)<64?"work_area":"gwork_area", ofs/16,d);break;
-			default: 	len = sprintf(buffer, "p%d[%d] = x%d; \\\n", i, ofs/16, d);break;
+			case PTR_LR:len = sprintf(buffer, "b%d = x%d; \\\n", ofs, d);break;
+			case PTR_H: len = sprintf(buffer, "%s = x%d; \\\n", wa, d);break;
+			default: 	len = sprintf(buffer, "p%d[%d] = x%d; \\\n", i, ofs, d);break;
 		}
 		break;
 	case OP_AND:
 		//d = d&i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = x%d&b%d; \\\n", d, d, ofs/16);break;
-			case PTR_H: len = sprintf(buffer, "x%d = x%d&%s(%d); \\\n", d, d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
-			default: 	len = sprintf(buffer, "x%d = x%d&p%d[%d]; \\\n", d, d, i, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = x%d&b%d; \\\n", d, d, ofs);break;
+			case PTR_H: len = sprintf(buffer, "x%d = x%d&%s; \\\n", d, d, wa);break;
+			default: 	len = sprintf(buffer, "x%d = x%d&p%d[%d]; \\\n", d, d, i, ofs);break;
 		}
 		break;
 	case OP_OR:
 		//d = d|i[ofs]
 		switch(i){
-			case PTR_LR:len = sprintf(buffer, "x%d = x%d|b%d; \\\n", d, d, ofs/16);break;
-			case PTR_H: len = sprintf(buffer, "x%d = x%d|%s(%d); \\\n", d, d, (ofs/16)<64?"work_area":"gwork_area", ofs/16);break;
-			default: 	len = sprintf(buffer, "x%d = x%d|p%d[%d]; \\\n", d, d, i, ofs/16);break;
+			case PTR_LR:len = sprintf(buffer, "x%d = x%d|b%d; \\\n", d, d, ofs);break;
+			case PTR_H: len = sprintf(buffer, "x%d = x%d|%s; \\\n", d, d, wa);break;
+			default: 	len = sprintf(buffer, "x%d = x%d|p%d[%d]; \\\n", d, d, i, ofs);break;
 		}
 		break;
 	case OP_XOR:
@@ -1756,6 +1808,9 @@ synth_synthesize(FILE *sfp,
 	{
 	  fprintf(stderr, "Generating comparison code...");
 	  fprintf(clfp, "//LR assembly\n#define COMPARISON \\\n");
+	  
+	  cl_declare_regs("work",128);
+	  
 	  for (i = 0; i < 11; i++)
 		synth_assemble_lr(sfp,i, lrq[i], n_lrq[i]);
 	  fprintf(stderr, " done\n");
@@ -1780,7 +1835,9 @@ synth_synthesize(FILE *sfp,
 		  r,
 		  PTR_H,
 		  OFS_H(HIT_ANY));
-
+  
+  cl_save_work_area();
+  
 #if DEBUG>=1
   ot = ftell(sfp) - ot;
   fprintf(stderr,

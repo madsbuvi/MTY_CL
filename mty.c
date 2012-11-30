@@ -68,7 +68,7 @@ register_trips_generated(int gpu, uint64_t n){
 
 #define USEC_SEC 1000	/* 1•b */
 
-static
+
 uint64_t
 usec(void)
 {
@@ -390,6 +390,7 @@ static
 NORETURN
 thread_crypt64_new(void *a_param)
 {
+return;
 	struct THREAD_PARAM *param = a_param;
 	CODE_T *code = param->code;
 	CODE_T *cmp = code + param->code_cmp;
@@ -438,14 +439,29 @@ thread_crypt64_new(void *a_param)
 	/* notreached */
 }
 
+static struct status {
+	uint64_t startTime;	/* Start time in milliseconds */
+	uint64_t lastTime;	/* Time of last display in milliseconds */
+	uint64_t loop;		/* Total number of searches */
+	uint64_t cpu;		/* Number of searches on CPU */
+	uint64_t gpu;		/* Number of seraches on GPU */
+	uint64_t lastloop;	/* Last display of loop (?) */
+} status;
+
+void
+set_start_time(){
+	if(!status.startTime)status.startTime = status.lastTime = usec();
+}
+
 
 static void
 initialize_gpu_searcher(pthread_t *gpu_handler){
-	int num_devices = gpu_init();
+	fprintf(stderr,"%I64u\n",usec());
+	int num_devices = gpu_init(usec());
 	fprintf(stderr,"Number of GPUs detected: %d\n",num_devices);
 	int i = 0;
 	for(;i<num_devices; i++){
-		pthread_create( gpu_handler, NULL, gpu_main, NULL);
+		pthread_create( &gpu_handler[i], NULL, gpu_main, NULL);
 	}
 	//pthread_join(*gpu_handler, NULL);
 }
@@ -475,14 +491,7 @@ main(int argc, char *argv[])
   struct KS_KEY key;
 
 #define UPDATE_INTERVAL 8	/* Interval between screen updates in seconds */
-  struct status {
-    uint64_t startTime;	/* Start time in milliseconds */
-    uint64_t lastTime;	/* Time of last display in milliseconds */
-    uint64_t loop;		/* Total number of searches */
-	uint64_t cpu;		/* Number of searches on CPU */
-	uint64_t gpu;		/* Number of seraches on GPU */
-    uint64_t lastloop;	/* Last display of loop (?) */
-  } status;
+  status.startTime = status.lastTime = 0;
   uint64_t curTime;
   uint32_t upd_int = 0;
 /*
@@ -628,8 +637,9 @@ main(int argc, char *argv[])
 #endif
 	}
 	
-  pthread_t gpu_handler;
-  initialize_gpu_searcher(&gpu_handler);
+  //I'll take the libery of assuming this application won't have to handle more than 1024 gpus
+  pthread_t gpu_handler[1024]; 
+  initialize_gpu_searcher(gpu_handler);
 
   //return; 
   //fprintf(stderr,"Debug variables. %d\n",(int)&debug_variables);
@@ -640,7 +650,7 @@ main(int argc, char *argv[])
 
   cr = 0;
   memset( &status, 0, sizeof( struct status ) );
-  status.startTime = status.lastTime = usec();
+  
 
   /* Search loop */
   for (;;)

@@ -22,10 +22,15 @@
 #include "wdict.h"
 #include "log.h"
 #include "crypt3.h"
+#include "key_cl.h"
 
 //Structures used by MTY for matching tripcodes
 void *dictpool,*wdk_pool,*wdw_pool;
 int32_t dictpool_size, wdksize, wdwsize, min_dictpool, n_dictpool;
+
+//Sources
+char *source_crypt, *source_sboxdef, *source_cmp,  *source_des;
+size_t len_crypt, len_sboxdef, len_cmp, len_wdict_config, len_des;
 
 //Will contain a list of what ciphertext bits are found in registers and which must be found via
 //LDS/Shared memory.
@@ -156,63 +161,41 @@ void coalesc_keys(uint32_t *keys_plain, uint32_t *keys_coalesced, uint32_t n){
     }
 }
 
-void examine(uint32_t hits, char *key, char last_char, int hits_index, const uint8_t *salt_in){
-		int line = 0;
-	while(hits){
-
-		while(!(hits&1)){
-			hits>>=1;
-			line++;
-		}
-		char hit_key[9];
-		hit_key[8] = '\0';
-		memcpy(hit_key, key+8*line, 8);
-		hit_key[7] = last_char;
-		hits>>=1;
-		char salt[2] = {salt_chars[salt_in[0]],salt_chars[salt_in[1]]};
-		char *hash = crypt(hit_key, salt);
-		assert(hash);
-		log_print(1, hash+3, (uint8_t*)hit_key);
-		free(hash);
-	}
+void examine(uint32_t hits, cl_key_char *keys){
+	if(!hits)return;
+	uint8_t key[9];
+	int i;
+	for(i = 0; i < 6; i++)key[i] = keys[i].key;
+	char salt[2] = {salt_chars[key[1]],salt_chars[key[2]]};
+	key[6] = hits&0xff;
+	key[7] = hits/0x100;
+	key[8] = cl_key_get_last(key[6], key[7]);
+	cl_key_make_safe(key);
+	char *hash = crypt(key, salt);
+	assert(hash);
+	log_print(1, hash+3, key);
+	free(hash);
 }
 
-void cl_setup_shared_key(uint8_t *key, char *cl){
+void cl_setup_shared_key(cl_key_char *key, char *cl){
 	int i,j;
 	for(i = 0; i < 8; i++){
+		cl += sprintf(cl, "#define key%d_key %d\n", i, key[i].key);
+		cl += sprintf(cl, "#define key%d_type %d\n", i, key[i].type);
 		for(j = 0; j < 7; j++){
-			cl += sprintf(cl, "#define k%d %s\n", i*7+j, (key[i]&(1<<j))?"0xffffffff":"0");
+			cl += sprintf(cl, "#define k%d %s\n", i*7+j, (key[i].key&(1<<j))?"0xffffffff":"0");
 		}
 	}
+	
 }
 
-#define ASCII_MAX_VAL 125
-#define ASCII_MIN_VAL 36
-#define BATCH_SIZE (ASCII_MAX_VAL - ASCII_MIN_VAL + 1)
+#define BATCH_SIZE 100
 
 /*
  * Infinitely searches random ASCII keys
  */
-int do_search(uint8_t *salt, int gpu){
-	uint8_t shared_key[8] = {0,0,0,0,0,0,0,0};
-	random_string(shared_key,8);
-	shared_key[1] = salt[0];
-	shared_key[2] = salt[1];
-	
-   /*
-     * Set-up OpenCL
-     */
-	//Will contain a list of defines to pass to the opencl compiler
-	//Instead of having another level of indirection with the extension matrix, i'll just
-	//hardcode it and recompile when it needs to change.
-	//So long as recompilation is rare enough, this is rewarding depsite the need for recompilation.
-	char E_cl[2048];
-	cl_set_salt(salt, E_cl);
-	
-	//Will contain the bits of a shared key
-	char K_cl[2048];
-	cl_setup_shared_key(shared_key, K_cl);
-
+int do_search(int gpu){
+	cl_key_char shared_key[9];
     cl_device_id device_id = NULL;
 	cl_context context = NULL;
 	cl_command_queue command_queue = NULL;
@@ -222,33 +205,32 @@ int do_search(uint8_t *salt, int gpu){
 	cl_kernel kernel = NULL;
 	cl_kernel inc_kernel = NULL;
 	cl_int ret;
-
-	char *source_crypt, *source_sboxdef, *source_cmp,  *source_des;
-	size_t len_crypt, len_sboxdef, len_cmp, len_wdict_config, len_des;
+	uint8_t salt[2];
 	int32_t a,b,c;
-
-					
+	
+	//Will contain a list of defines to pass to the opencl compiler
+	//Instead of having another level of indirection with the extension matrix, i'll just
+	//hardcode it and recompile when it needs to change.
+	//So long as recompilation is rare enough, this is rewarding depsite the need for recompilation.
+	char E_cl[2048];
+	//Will contain defines on the bits of a shared key
+	char K_cl[2048*2];
+	//Will contain a few configurations related to wdict
 	char wdict_config[1024];
+	
+	cl_key_reset(shared_key, 0);
+	salt[0] = salt_chars[shared_key[1].key];
+	salt[1] = salt_chars[shared_key[2].key];
+	cl_set_salt(salt, E_cl);
+	cl_setup_shared_key(shared_key, K_cl);
+	
+	printf("Shared key is %x %x %x\n", shared_key[0].key, shared_key[1].key, shared_key[2].key);
+	
 	len_wdict_config = sprintf(wdict_config,
 			"#define MIN_DICTPOOL %d\n"
 			"#define N_DICTPOOL %d\n"
-			"#define ASCII_MAX_VAL %d\n"
-			"#define ASCII_MIN_VAL %d\n"
-			"#define BATCH_SIZE (ASCII_MAX_VAL - ASCII_MIN_VAL + 1)\n",
-			min_dictpool, n_dictpool, ASCII_MAX_VAL, ASCII_MIN_VAL);
-	
-	source_crypt = (char *)readFile("./gpu.cl",&len_crypt);
-	source_sboxdef = (char *)readFile("./sboxdef.cl", &len_sboxdef);
-	source_cmp = (char *)readFile("./cmp.cl", &len_cmp);
-	source_des = (char *)readFile("./des.cl", &len_des);
-	assert(source_crypt!=NULL /* reading gpu source code failed */);
-	assert(len_crypt>0 /* gpu source was 0 characters long */);
-	assert(source_sboxdef!=NULL /* reading gpu source code failed */);
-	assert(len_sboxdef>0 /* gpu source was 0 characters long */);
-	assert(source_cmp!=NULL /* reading cmp source code failed */);
-	assert(len_cmp>0 /* cmp source was 0 characters long */);
-	assert(source_des!=NULL /* reading des source code failed */);
-	assert(len_des>0 /* des source was 0 characters long */);
+			"#define BATCH_SIZE %d\n",
+			min_dictpool, n_dictpool, BATCH_SIZE);
 
 	/* Get Platform and Device Info */
 	init_cl_gpu_specific(gpu, &device_id, &context, & command_queue);
@@ -262,6 +244,7 @@ int do_search(uint8_t *salt, int gpu){
 	
 	/* Build Kernel Program */
 	ret = clBuildProgram(program, 1, &device_id, "-cl-opt-disable", NULL, NULL);
+	//return;
 	if(ret){
 	    char buildString[100000];
 	    buildString[0]='\0';
@@ -271,8 +254,8 @@ int do_search(uint8_t *salt, int gpu){
 
 	/* Create OpenCL Kernel */
 	//HandleErrorPar(kernel = clCreateKernel(program, "crypt25", HANDLE_ERROR));
+	
 	kernel = cl_create_kernel(program, "crypt25");
-	inc_kernel = cl_create_kernel(program, "inc_key");
 	
 	/* Gather information about host and device */
 	uint32_t max_compute_units = 0;
@@ -287,39 +270,43 @@ int do_search(uint8_t *salt, int gpu){
 	uint32_t work_group_size = 128;
 	uint32_t n = max_compute_units * work_group_size * 2;
 	
-	
-	//host-side buffers for key structures.
-	uint32_t *keys, *keys_coalesced, *key_end,
+	//host-side buffers for key related structures.
+	cl_key_char *keys;
+	uint32_t *keys_coalesced, *keys_sliced, *seeds, *sjis,
 		keys_size = n*56*sizeof(uint32_t),
-		key_end_size = 2*sizeof(uint32_t),
-		key_end_offset = keys_size;
+		seeds_size = n*sizeof(uint32_t),
+		sjis_size = 256*256*2*sizeof(uint32_t),
+		seeds_offset = keys_size,
+		sjis_offset = seeds_offset+seeds_size;
 	
 	//host-size buffers for the structures used to transfer founds keys back to host.
 	uint32_t *hit_bool, *hits,
 		hit_bool_size = sizeof(uint32_t),
 		hits_size = BATCH_SIZE*n*sizeof(uint32_t)*32, //This is where the bulk of the memory usage of this program comes from
-		hit_bool_offset = key_end_offset+key_end_size,
+		hit_bool_offset = sjis_offset+sjis_size,
 		hits_offset = hit_bool_offset + hit_bool_size;
 	
 	//buffer allocated for keys will also contain three other parameters
-	//because adding any more parameters past 6 causes a slowdown on my AMD 7850
+	//because adding any more parameters past 6 causes a slowdown on my AMD 7850...
+	//Haven't tested if that still happens on newer drivers, though. Must be an opencl
+	//compiler quirk 
 	uint32_t keys_and_extra_size = 
 			keys_size
-		+	key_end_size
+		+	seeds_size
+		+	sjis_size
 		+	hit_bool_size
 		+	hits_size;
 		
 	//Allocate memory
-	keys = (uint32_t*)calloc(56*sizeof(uint32_t), n);
 	keys_coalesced = (uint32_t*)calloc(keys_and_extra_size, 1);
-	key_end = (void *)keys_coalesced+key_end_offset;
+	seeds = (void *)keys_coalesced+seeds_offset;
+	sjis = (void *)keys_coalesced+sjis_offset;
 	hit_bool = (void *)keys_coalesced+hit_bool_offset;
 	hits = (void *)keys_coalesced+hits_offset;
 
-	
-	assert(keys != NULL /*too little memory*/);
 	assert(keys_coalesced != NULL /*too little memory*/);
-	//printf("Hits size: %d\n",hits_size);
+	
+	copy_sjis_tables(sjis);
 	
 	/* Allocate memory on gpu */
 	keys_and_extra_gpu = cl_malloc(context, keys_and_extra_size);
@@ -328,7 +315,6 @@ int do_search(uint8_t *salt, int gpu){
 	wdk_gpu = cl_malloc(context, wdksize);
 	wdw_gpu = cl_malloc(context, wdwsize);
 	wa_gpu = cl_malloc(context, n*1024*sizeof(uint32_t));
-	
 
     /* Write to memory on gpu */
 	cl_copy_to(keys_and_extra_gpu, keys_coalesced, keys_and_extra_size, 0, command_queue);
@@ -338,7 +324,6 @@ int do_search(uint8_t *salt, int gpu){
 	
     /* Set as arguments */
     HandleErrorRet(clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&keys_and_extra_gpu));
-    HandleErrorRet(clSetKernelArg(inc_kernel, 0, sizeof(cl_mem), (void *)&keys_and_extra_gpu));
     HandleErrorRet(clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&blocks_gpu));
     HandleErrorRet(clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&wa_gpu));
 	HandleErrorRet(clSetKernelArg(kernel, 3, sizeof(cl_mem), (void *)&g_dictpool_gpu));
@@ -347,54 +332,58 @@ int do_search(uint8_t *salt, int gpu){
     
 
     /* Execute */
-	int length = 5; //do a few batches with the same salt to completely hide setup time.
-	
+	int length = 25; //do a few batches with the same shared key to completely hide setup time.
+	set_start_time();
+	keys = calloc(8*32*n, sizeof(cl_key_char));
+	keys_sliced = calloc(8*32*n, sizeof(uint32_t));
     for(a=0; a<length; a++){
-		
-        uint8_t key[n*32][8];
-		
-        memset(keys,0,keys_size);
+		//printf("%d / %d\n", a, length);
+		//Reset keys
+        memset(keys_sliced,0,keys_size);
 		memset(keys_coalesced,0,keys_size);
 		
+		//Generate pseudorandom shift-jis keys
 		for(b=0; b<n*32; b++){
-			random_string(key[b], 6);
-			key[b][0] = shared_key[0];
-			key[b][1] = salt[0];
-			key[b][2] = salt[1];
-			set_key_line(keys+((b/32)*56),key[b],b%32,6);
+			keys[b*8+0] = shared_key[0];
+			keys[b*8+1] = shared_key[1];
+			keys[b*8+2] = shared_key[2];
+			keys[b*8+5].type = 0;
+			
+			//Requiring the sixth character to be of type 1
+			//makes setting keys on the gpu that much simpler
+			while(keys[b*8+5].type != 1)cl_key_reset(keys+b*8,3);
+			uint8_t key[8];
+			for(c = 0; c < 8; c++)key[c] = keys[b*8+c].key;
+			set_key_line(keys_sliced+((b/32)*56),key,b%32,6);	
 		}
-		coalesc_keys(keys,keys_coalesced,n);
-		cl_copy_to(keys_and_extra_gpu, keys_coalesced, keys_size, 0, command_queue);
 		
-		for(b = ASCII_MIN_VAL; b <= ASCII_MAX_VAL; b++){
-			key_end[1] = b;
-			key_end[0] = ASCII_MIN_VAL;
-			cl_copy_to(keys_and_extra_gpu, key_end, key_end_size, key_end_offset, command_queue);
-			for(c = ASCII_MIN_VAL; c <= ASCII_MAX_VAL; c++){
+		coalesc_keys(keys_sliced,keys_coalesced,n);
+		for(b = 0; b < n; b++)seeds[b] = rand();
+		cl_copy_to(keys_and_extra_gpu, keys_coalesced, keys_size + seeds_size, 0, command_queue);
+		
+		for(b = 0; b <= 7; b++){
+			for(c = 0; c <= BATCH_SIZE; c++){
 				HandleErrorRet(clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &n, &work_group_size, 0, NULL, NULL));
-				HandleErrorRet(clEnqueueNDRangeKernel(command_queue, inc_kernel, 1, NULL, &n, &work_group_size, 0, NULL, NULL));
 				
 			}
-			register_trips_generated(gpu, (uint64_t)BATCH_SIZE*n*32);
+			
 			HandleErrorRet(clEnqueueReadBuffer(command_queue, keys_and_extra_gpu, CL_TRUE, hit_bool_offset,
 				hit_bool_size, hit_bool, 0, NULL, NULL));
+			register_trips_generated(gpu, BATCH_SIZE*n*32);
 			if(*hit_bool){
 				*hit_bool = 0;
 				//Copy 
 				cl_copy_from(keys_and_extra_gpu, hits, hits_size, hits_offset, command_queue);
 
-				for(c=0; c<n*32; c++){
-					key[c][6] = key_end[1];
-				}				
-				
 				//Examine hits
-				for(c=0; c<n*BATCH_SIZE; c++){
-					examine(hits[c], key[(c/BATCH_SIZE)*32], ASCII_MIN_VAL+(c%BATCH_SIZE), c, salt);
+				for(c=0; c<n*BATCH_SIZE*32; c++){
+					examine(hits[c], keys+(8*(c/BATCH_SIZE)));
 					hits[c] = 0;
 				}
 				
 				//Reset
-				cl_copy_to(keys_and_extra_gpu, keys_coalesced, keys_and_extra_size, 0, command_queue);
+				cl_copy_to(keys_and_extra_gpu, hit_bool, hit_bool_size+hits_size, hit_bool_offset, command_queue);
+
 			}
 		}
 		
@@ -416,9 +405,6 @@ int do_search(uint8_t *salt, int gpu){
     HandleErrorRet(clReleaseContext(context));
 	free(keys);
 	free(keys_coalesced);
-	free(source_crypt);
-	free(source_sboxdef);
-	free(source_cmp);
     return 0;
 }
 
@@ -439,22 +425,35 @@ void cl_configure_b(char *regs, char *cl){
 	cipher_registers = regcount;
 }
 
-int gpu_init(){
+int gpu_init(uint32_t seed){
     srand(time(NULL));
 	cl_configure_b(B_reg, B_cl);
+	cl_key_init(seed);
 	wdict_setup_gpu(&dictpool, &wdk_pool, &wdw_pool,
 					&dictpool_size, &wdksize, &wdwsize,
 					&min_dictpool, &n_dictpool);
+					
+	source_crypt = (char *)readFile("./gpu.cl",&len_crypt);
+	source_sboxdef = (char *)readFile("./sboxdef.cl", &len_sboxdef);
+	source_cmp = (char *)readFile("./cmp.cl", &len_cmp);
+	source_des = (char *)readFile("./des.cl", &len_des);
+	assert(source_crypt!=NULL /* reading gpu source code failed */);
+	assert(len_crypt>0 /* gpu source was 0 characters long */);
+	assert(source_sboxdef!=NULL /* reading gpu source code failed */);
+	assert(len_sboxdef>0 /* gpu source was 0 characters long */);
+	assert(source_cmp!=NULL /* reading cmp source code failed */);
+	assert(len_cmp>0 /* cmp source was 0 characters long */);
+	assert(source_des!=NULL /* reading des source code failed */);
+	assert(len_des>0 /* des source was 0 characters long */);
 					
 	return cl_get_num_gpus();
 }
 
 void *gpu_main(void *dummyarg /* Takes no argument */){
 	int gpu = register_gpu();
+	printf("dk size: %i64u\n",wdksize);
     while(1){
-		uint8_t salt[3];
-		random_string(salt, 2);
-		do_search(salt, gpu);
+		do_search(gpu);
 		
 	}
     return NULL;
