@@ -334,6 +334,7 @@ static
 uint64_t
 thread_avail(void)
 {
+	
 #if !USE_MT
 
   return 0x1U;

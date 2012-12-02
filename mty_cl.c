@@ -161,7 +161,7 @@ void coalesc_keys(uint32_t *keys_plain, uint32_t *keys_coalesced, uint32_t n){
     }
 }
 
-void examine(uint32_t hits, cl_key_char *keys){
+void examine(uint32_t hits, cl_key_char *keys, int item){
 	if(!hits)return;
 	uint8_t key[9];
 	int i;
@@ -174,6 +174,7 @@ void examine(uint32_t hits, cl_key_char *keys){
 	char *hash = crypt(key, salt);
 	assert(hash);
 	log_print(1, hash+3, key);
+	printf("\t\tFound in item %d, line %d\n",item/32, item%32);
 	free(hash);
 }
 
@@ -270,7 +271,7 @@ int do_search(int gpu){
 	
 	//host-side buffers for key related structures.
 	cl_key_char *keys;
-	uint32_t *keys_coalesced, *keys_sliced, *seeds, *sjis,
+	uint32_t *keys_coalesced, *keys_sliced, *seeds, *sjis, *keys_taken,
 		keys_size = n*56*sizeof(uint32_t),
 		seeds_size = n*sizeof(uint32_t),
 		sjis_size = 256*256*2*sizeof(uint32_t),
@@ -297,6 +298,7 @@ int do_search(int gpu){
 		
 	//Allocate memory
 	keys_coalesced = (uint32_t*)calloc(keys_and_extra_size, 1);
+	keys_taken = (uint32_t*)calloc(256*256*n/32,sizeof(*keys_taken));
 	seeds = (void *)keys_coalesced+seeds_offset;
 	sjis = (void *)keys_coalesced+sjis_offset;
 	hit_bool = (void *)keys_coalesced+hit_bool_offset;
@@ -308,7 +310,7 @@ int do_search(int gpu){
 	
 	/* Allocate memory on gpu */
 	keys_and_extra_gpu = cl_malloc(context, keys_and_extra_size);
-    blocks_gpu = cl_malloc(context, n*256*sizeof(uint32_t));
+    blocks_gpu = cl_malloc(context, 256*256*sizeof(uint32_t)*n/32 + 64*n*sizeof(uint32_t));
 	g_dictpool_gpu = cl_malloc(context, dictpool_size);
 	wdk_gpu = cl_malloc(context, wdksize);
 	wdw_gpu = cl_malloc(context, wdwsize);
@@ -334,6 +336,7 @@ int do_search(int gpu){
 	set_start_time();
 	keys = calloc(8*32*n, sizeof(cl_key_char));
 	keys_sliced = calloc(8*32*n, sizeof(uint32_t));
+	//printf("Recompiled!\n");
     for(a=0; a<length; a++){
 		//printf("%d / %d\n", a, length);
 		//Reset keys
@@ -358,8 +361,9 @@ int do_search(int gpu){
 		coalesc_keys(keys_sliced,keys_coalesced,n);
 		for(b = 0; b < n; b++)seeds[b] = rand();
 		cl_copy_to(keys_and_extra_gpu, keys_coalesced, keys_size + seeds_size, 0, command_queue);
+		cl_copy_to(blocks_gpu, keys_taken, 256*256*n*sizeof(*keys_taken)/32, 0, command_queue);
 		
-		for(b = 0; b <= 7; b++){
+		for(b = 0; b <= 40; b++){
 			for(c = 0; c <= BATCH_SIZE; c++){
 				HandleErrorRet(clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &n, &work_group_size, 0, NULL, NULL));
 				
@@ -375,7 +379,7 @@ int do_search(int gpu){
 
 				//Examine hits
 				for(c=0; c<n*BATCH_SIZE*32; c++){
-					examine(hits[c], keys+(8*(c/BATCH_SIZE)));
+					examine(hits[c], keys+(8*(c/BATCH_SIZE)),(c/BATCH_SIZE));
 					hits[c] = 0;
 				}
 				

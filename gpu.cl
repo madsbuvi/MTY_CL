@@ -15,6 +15,7 @@
  * printout defines for ease of debugging
  */
 #define printi(a) if(index == 0)printf(#a ": %d\n",a);
+#define printx(a) if(index == 0)printf(#a ": %x\n",a);
 #define printc(a) if(index == 0)printf(#a ": %c\n",a);
 #define prints(s) if(index == 0)printf( s "\n");
 #define printul(a) if(index == 0)printf(#a ": %I64u\n",a);
@@ -238,7 +239,8 @@ __constant uint32_t testtrip[8] = {
  */
 #define key(x) keys[(x)*size+index]
 #define lk(x)  lkeys[(x)*lsize]
-#define gb(x) blocks[(x)*size+index]
+#define temps(x) temporaries[(x)*size+index]
+#define ku(x) key_used[(x)*size+index]
 #define lb(x) lblock[(x)*lsize + lindex]
 #define rb(x) rblock[(x)*lsize]
 #define work_area(x) lmem[(x)*lsize+lindex]
@@ -283,7 +285,7 @@ inline ulong next_int(ulong x){
 }
 
 __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
-                      __global type *blocks,//Space to back-up hashes
+                      __global type *key_used,//Space to back-up hashes
 					  __global type *gwa,	//Global Work Area for Quine-McCluskey's method
 					  __global struct WDICT *g_dictpool,	//Dictionaries for the search
 					  __global struct WDK * wdk_pool,		//Wdk entries
@@ -294,6 +296,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
     int lindex = get_local_id(0);
     int size = get_global_size(0);
 	
+	__global type *temporaries = key_used+(256*256*size)/32;
 
 	
 	/** ADDITIONAL PARAMETERS **/
@@ -341,20 +344,36 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	//Set the keys and update the current state/seed of the random
 	//number generator.
 	uint key1 = 0, key2 = 0, keytype = 0, seed = next_int(next_int(next_int(seeds[index])));
-	key1 = seed = next_int(seed);
-	key1 %= base_count;
-	key1 = base_chars[key1];
-	keytype = stype[key1];
-	key2 = seed = next_int(seed);
+	//Only do 2 retries, more apparently breaks performance. But 2 retries keeps re-picking
+	//a used key to a low enough level!
+	for(int i = 0; i < 50; i++){
+		key1 = seed = next_int(seed);
+		key1 %= base_count;
+		key1 = base_chars[key1];
+		keytype = stype[key1];
+		key2 = seed = next_int(seed);
+		
+		if(keytype==1){
+			key2 %= base_count;
+			key2 = base_chars[key2];
+		}
+		else{
+			key2 %= count[key1];
+			key2 = sjis[key1*256 + key2];
+		}
+		
+		//Determine if this key has been used before
+		uint kindex = ((key1&0x7f)<<7)+(key2&0x7f);
+		uint used = ku(kindex/32);
+		uint mod = kindex%32;
+		//Make another try
+		if(used&(1<<mod))continue;
+		//If not, mark as used and go on.
+		ku(kindex/32) = used | (1<<mod);
+		break;
+		
+	}
 	
-	if(keytype==1){
-		key2 %= base_count;
-		key2 = base_chars[key2];
-	}
-	else{
-		key2 %= count[key1];
-		key2 = sjis[key1*256 + key2];
-	}
 	
 	
 	if(index==0){
@@ -391,9 +410,6 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 		DES
 	}
 	
-	//Back-up blocks
-	gb(0) = b0; gb(1) = b1; gb(2) = b2; gb(3) = b3; gb(4) = b4; gb(5) = b5; gb(6) = b6; gb(7) = b7; gb(8) = b8; gb(9) = b9; gb(10) = b10; gb(11) = b11; gb(12) = b12; gb(13) = b13; gb(14) = b14; gb(15) = b15; gb(16) = b16; gb(17) = b17; gb(18) = b18; gb(19) = b19; gb(20) = b20; gb(21) = b21; gb(22) = b22; gb(23) = b23; gb(24) = b24; gb(25) = b25; gb(26) = b26; gb(27) = b27; gb(28) = b28; gb(29) = b29; gb(30) = b30; gb(31) = b31; gb(32) = b32; gb(33) = b33; gb(34) = b34; gb(35) = b35; gb(36) = b36; gb(37) = b37; gb(38) = b38; gb(39) = b39; gb(40) = b40; gb(41) = b41; gb(42) = b42; gb(43) = b43; gb(44) = b44; gb(45) = b45; gb(46) = b46; gb(47) = b47; gb(48) = b48; gb(49) = b49; gb(50) = b50; gb(51) = b51; gb(52) = b52; gb(53) = b53; gb(54) = b54; gb(55) = b55; gb(56) = b56; gb(57) = b57; gb(58) = b58; gb(59) = b59; gb(60) = b60; gb(61) = b61; gb(62) = b62; gb(63) = b63;
-
 	 barrier(CLK_LOCAL_MEM_FENCE);
 	 type x0,x1,x2,x3,x4,x5,x6,x7;
 		
@@ -437,49 +453,50 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	
 	//Store a double word, buildt from two sources
 	#define SDW(src1,src2,dest)\
-	lb(dest) = gb(src2);\
+	lb(dest) = b##src2;\
 	lb(dest) <<= 32;\
-	lb(dest) |= gb(src1);
+	lb(dest) |= b##src1;
 	//Store a double word, buildt from only one source as
 	//the would-be second is either ignored or always 0.
 	#define SW(src,dest)\
-	lb(dest) = gb(src);
+	lb(dest) = b##src;
 	
 	//Perform FP and first step of matrix transmutation in one.
 	if(x0){
 		{
-			SDW(0x0E,0x1B,0x00)
-			SDW(0x2E,0x3B,0x01)
-			SDW(0x06,0x13,0x02)
-			SDW(0x26,0x33,0x03)
-			SDW(0x1F,0x1A,0x04)
-			SDW(0x3F,0x3A,0x05)
-			SDW(0x05,0x12,0x06)
-			SDW(0x25,0x32,0x07)
-			SDW(0x1E,0x0A,0x08)
-			SDW(0x3E,0x2A,0x09)
-			SDW(0x16,0x11,0x0A)
-			SDW(0x36,0x31,0x0B)
-			SDW(0x1D,0x09,0x0C)
-			SDW(0x3D,0x29,0x0D)
-			SDW(0x15,0x01,0x0E)
-			SDW(0x35,0x21,0x0F)
-			SDW(0x0D,0x08,0x10)
-			SDW(0x2D,0x28,0x11)
-			SDW(0x14,0x00,0x12)
-			SDW(0x34,0x20,0x13)
-			SDW(0x0C,0x19,0x14)
-			SDW(0x2C,0x39,0x15)
-			SDW(0x0B,0x18,0x18)
-			SDW(0x2B,0x38,0x19)
-			SDW(0x03,0x10,0x1A)
-			SDW(0x23,0x30,0x1B)
-			SW(0x04,0x16)
-			SW(0x24,0x17)
-			SW(0x1C,0x1C)
-			SW(0x3C,0x1D)
-			SW(0x02,0x1E)
-			SW(0x22,0x1F)
+			SDW(14, 27, 0);
+			SDW(46, 59, 1);
+			SDW(6, 19, 2);
+			SDW(38, 51, 3);
+			SDW(31, 26, 4);
+			SDW(63, 58, 5);
+			SDW(5, 18, 6);
+			SDW(37, 50, 7);
+			SDW(30, 10, 8);
+			SDW(62, 42, 9);
+			SDW(22, 17, 10);
+			SDW(54, 49, 11);
+			SDW(29, 9, 12);
+			SDW(61, 41, 13);
+			SDW(21, 1, 14);
+			SDW(53, 33, 15);
+			SDW(13, 8, 16);
+			SDW(45, 40, 17);
+			SDW(20, 0, 18);
+			SDW(52, 32, 19);
+			SDW(12, 25, 20);
+			SDW(44, 57, 21);
+			SDW(11, 24, 24);
+			SDW(43, 56, 25);
+			SDW(3, 16, 26);
+			SDW(35, 48, 27);
+			SW(4, 22);
+			SW(36, 23);
+			SW(28, 28);
+			SW(60, 29);
+			SW(2, 30);
+			SW(34, 31);
+
 		}
 		
 		//Rest of the transmutation
@@ -527,7 +544,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 					
 				}
 				else {
-					gb(potential_finds) = i;
+					temps(potential_finds) = i;
 					
 #if debugprints
 	printf("POTENTIAL Hit was made in slice %d\n",i);
@@ -572,7 +589,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 			uint64_t norm = normalise(item);
 			
 			//start search
-			int hindex = gb(potential_finds);
+			int hindex = temps(potential_finds);
 			//Iterate over the valid dictionaries.
 			for(int p = MIN_DICTPOOL; p < N_DICTPOOL; p++){
 				__global struct WDICT *pd = &g_dictpool[p];
