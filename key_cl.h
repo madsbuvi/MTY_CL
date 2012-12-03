@@ -11,11 +11,13 @@ typedef struct{
 void cl_key_init();
 
 //Reset a key to a new random valid sjis-key
+void cl_key_random(cl_key_char *key, int n);
+//Reset a key to the numerically lowest valid
 void cl_key_reset(cl_key_char *key, int n);
 
 //Increment a key to the next valid sjis-key (not used)
 int cl_key_inc_single(cl_key_char *key, int n);
-void cl_key_inc(cl_key_char *key);
+void cl_key_inc(cl_key_char *key, int m);
 
 //Make a copy of the sjis tables for use outside key_cl.c
 void copy_sjis_tables(uint32_t *target);
@@ -30,3 +32,12 @@ int cl_key_get_last(int key1, int key2);
 //This deals with this by replacing those characters with sjis characters
 //that the DES algorithm sees as the same.
 void cl_key_make_safe(uint32_t *key);
+
+//Generates all the possible next 3 characters for the given key.
+//cl_key_char *key is a pointer to the shared key used in mty_cl.c
+uint32_t generate_all(cl_key_char *key, uint8_t **target);
+
+//PRNG
+inline uint64_t next_int(uint64_t x);
+
+uint32_t getCount(uint32_t key);

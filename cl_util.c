@@ -272,7 +272,7 @@ cl_mem __cl_malloc__(cl_context context, size_t size, int line, const  char *fil
 	cl_mem memory_object;
 
 	cl_int error;
-	memory_object = clCreateBuffer(context, CL_MEM_READ_ONLY, size, NULL, &error);
+	memory_object = clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, &error);
 	if(error){
 		handle_error(error, line, file);
 		exit(-1);

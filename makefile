@@ -5,7 +5,7 @@ BISON = bison
 BFLAGS = --debug
 FLEX = flex
 LFLAGS = -lpthread -lOpenCL
-LGTK = -LD:/usr/dev/lib -lgtk-win32-2.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0 -lgtksourceview-2.0
+LGTK = -LD:/usr/dev/lib -lgtk-win32-2.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0 -lgtksourceview-2.0 -lintl
 GTKFLAGS =  -I"D:\usr\dev\include\gtksourceview-2.0" -ID:/usr/dev/include/gtk-2.0 -ID:/usr/dev/lib/gtk-2.0/include -ID:/usr/dev/include/atk-1.0 -ID:/usr/dev/include/cairo -ID:/usr/dev/include/gdk-pixbuf-2.0 -ID:/usr/dev/include/pango-1.0 -ID:/usr/dev/include/glib-2.0 -ID:/usr/dev/lib/glib-2.0/include -ID:/usr/dev/include
 
 # SSE2 ‚Æ MMX ‚Ì‘I‘ð (‚Ç‚¿‚ç‚©•Ð•û‚¾‚¯‚ð—LŒø‚É‚·‚é)
@@ -48,7 +48,7 @@ $(GUI_TARG)	: $(GUI_OBJS)
 	strip $(GUI_TARG)
 	
 $(TARG)	: $(OBJS)
-	$(CC) $(CFLAGS) $(DEFS) -o $(TARG) $(OBJS) $(LFLAGS)
+	$(CC) $(CFLAGS) $(GTKFLAGS) $(DEFS) -o $(TARG) $(OBJS) $(LFLAGS) $(LGTK)
 	strip $(TARG)
 	editbin /STACK:33554432 $(TARG)
 

@@ -78,11 +78,6 @@ struct WDICT
   int32_t nwords;
 };
 
-typedef struct{
-	uint32_t key;
-	uint32_t type;
-} cl_key_char;
-
 inline uint64_t
 xpize(uint64_t m, uint32_t xp, uint32_t len)
 {
@@ -218,6 +213,7 @@ __constant int tr_fp[64 + 2] =
   64, 64,
 };
 
+#endif
 __constant int tr_sub[64] = {
 	'.','/','0','1','2','3','4','5',
 	'6','7','8','9','A','B','C','D',
@@ -228,7 +224,6 @@ __constant int tr_sub[64] = {
 	'k','l','m','n','o','p','q','r',
 	's','t','u','v','w','x','y','z'
 };
-#endif
 #if asdasd
 __constant uint32_t testtrip[8] = {
 	0x36, 0x2A, 0xB6, 0x35, 0xA2, 0x88, 0xE9, 0x24
@@ -285,7 +280,7 @@ inline ulong next_int(ulong x){
 }
 
 __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
-                      __global type *key_used,//Space to back-up hashes
+                      __global type *key_ends,//Space to back-up hashes
 					  __global type *gwa,	//Global Work Area for Quine-McCluskey's method
 					  __global struct WDICT *g_dictpool,	//Dictionaries for the search
 					  __global struct WDK * wdk_pool,		//Wdk entries
@@ -296,19 +291,17 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
     int lindex = get_local_id(0);
     int size = get_global_size(0);
 	
-	__global type *temporaries = key_used+(256*256*size)/32;
+
 
 	
 	/** ADDITIONAL PARAMETERS **/
 	//Calculate additional parameters.
-	//Performance would plunge if i had too many parameters... register spilling? That doesn't seem right.
+	//Performance would plunge if i had too many parameters... register spilling? That doesn't seem right...
 
 	/** Regular parameters **/
-	__global type *seeds;
-	__global type *sjis;
+	__global type *key_end_index;
 	
-	seeds = keys + 56*size;
-	sjis = seeds + size;
+	key_end_index = keys + 56*size;
 	
 	
 	/** Hit parameters **/
@@ -320,8 +313,9 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 								
 	__global uint32_t *hits;//One for each work item (here is the large memory usage of this program!)
 	
-	hit_bool = sjis + 256*256 + 256*256;
+	hit_bool = key_end_index + 1;
 	hits = hit_bool + 1;
+	
 									
 	//Keep block in registers while performing hash.
 	type b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, b34, b35, b36, b37, b38, b39, b40, b41, b42, b43, b44, b45, b46, b47, b48, b49, b50, b51, b52, b53, b54, b55, b56, b57, b58, b59, b60, b61, b62, b63;
@@ -338,52 +332,18 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	for(int i = 0; i < 21; i++){
 		
 		lk(i) = key(i+21);
-		
 	}
 	
 	//Set the keys and update the current state/seed of the random
 	//number generator.
-	uint key1 = 0, key2 = 0, keytype = 0, seed = next_int(next_int(next_int(seeds[index])));
-	//Only do 2 retries, more apparently breaks performance. But 2 retries keeps re-picking
-	//a used key to a low enough level!
-	for(int i = 0; i < 50; i++){
-		key1 = seed = next_int(seed);
-		key1 %= base_count;
-		key1 = base_chars[key1];
-		keytype = stype[key1];
-		key2 = seed = next_int(seed);
-		
-		if(keytype==1){
-			key2 %= base_count;
-			key2 = base_chars[key2];
-		}
-		else{
-			key2 %= count[key1];
-			key2 = sjis[key1*256 + key2];
-		}
-		
-		//Determine if this key has been used before
-		uint kindex = ((key1&0x7f)<<7)+(key2&0x7f);
-		uint used = ku(kindex/32);
-		uint mod = kindex%32;
-		//Make another try
-		if(used&(1<<mod))continue;
-		//If not, mark as used and go on.
-		ku(kindex/32) = used | (1<<mod);
-		break;
-		
-	}
+	uint key1, key2, key_index;
+	key_index = *key_end_index;
+	key1 = key_ends[key_index*2+0];
+	key2 = key_ends[key_index*2+1];
+	//printi(key1);
+	//printi(key2);
+	//printi(key_index);
 	
-	
-	
-	if(index==0){
-		//printi(key1);
-		//printi(key2);
-		//printi(base_count);
-		//printi(seeds[index]);
-	}
-	seeds[index] = seed;
-
 	lk(21) = -((key1>>0)&1);
 	lk(22) = -((key1>>1)&1);
 	lk(23) = -((key1>>2)&1);
@@ -460,7 +420,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	//the would-be second is either ignored or always 0.
 	#define SW(src,dest)\
 	lb(dest) = b##src;
-	
+
 	//Perform FP and first step of matrix transmutation in one.
 	if(x0){
 		{
@@ -536,7 +496,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 		int potential_finds = 0;
 		//potential finds are stored in Local memory, but are also
 		//paired together with their old index which will be needed~
-		
+
 		for(type i = 0; i < 8*sizeof(type); i++){
 			if(x0&((type)1<<i)){
 				if(x1&((type)1<<i)){
@@ -544,7 +504,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 					
 				}
 				else {
-					temps(potential_finds) = i;
+					
 					
 #if debugprints
 	printf("POTENTIAL Hit was made in slice %d\n",i);
@@ -574,7 +534,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 		printf("Key: %x %x %x %x %x %x %x %x\n",key0_key,key1_key,key2_key,key[3],key[4],key[5],key[6],key[7]);
 	}
 #endif
-					
+					lb(31-potential_finds) = i;
 					lb(potential_finds++)=lb(i);
 				}	
 			}
@@ -589,7 +549,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 			uint64_t norm = normalise(item);
 			
 			//start search
-			int hindex = temps(potential_finds);
+			int hindex = lb(31-potential_finds);
 			//Iterate over the valid dictionaries.
 			for(int p = MIN_DICTPOOL; p < N_DICTPOOL; p++){
 				__global struct WDICT *pd = &g_dictpool[p];
@@ -686,4 +646,14 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	}
 	#if 0
 	#endif
+}
+
+__kernel void inc_key_offset(__global uint *keys){
+    int index = get_global_id(0);
+	int size = get_global_size(0);
+	if(!index){
+		__global type *key_end_index;
+		key_end_index = keys + 56*size;
+		key_end_index[0]++;
+	}
 }
