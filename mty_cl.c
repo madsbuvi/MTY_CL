@@ -395,7 +395,6 @@ int do_search(int gpu){
 				hit_bool_size, hit_bool, 0, NULL, NULL));
 			register_trips_generated(gpu, BATCH_SIZE*n*32);
 			if(*hit_bool){
-				printf("Hit bool encountered\n");
 				*hit_bool = 0;
 				//Copy 
 				cl_copy_from(keys_and_extra_gpu, hits, hits_size, hits_offset, command_queue);
