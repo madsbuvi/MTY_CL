@@ -33,7 +33,11 @@ But it was released on his sourceforge claiming GPL, so at least redistribution 
 Changelog
 ---------
 0.31. - Further speedup (1.25x). No more duplicates.
+
 0.30. - Shift_JIS keys. Key selection makes a lot of duplicates.
+
 0.20. - Massive speedup (2x).
+
 0.11. - Added a graphical user interface, also released a wrapper for mtycal.
+
 0.10. - First release. ASCII Only and relatively slow. Key selection makes some duplicates.
