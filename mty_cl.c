@@ -35,13 +35,6 @@ size_t len_crypt, len_sboxdef, len_cmp, len_wdict_config, len_des;
 //List of all possible two last characters
 uint32_t *end_keys, num_end_keys;
 
-//Will contain a list of what ciphertext bits are found in registers and which must be found via
-//LDS/Shared memory.
-char B_reg[64];
-int cipher_registers;
-//CL source of the above, list of defines.
-char B_cl[2048];
-
 //generated
 char salt_chars[] =  ".............................................../0123456789ABCDEFGABCDEFGHIJKLMNOPQRSTUVWXYZabcdefabcdefghijklmnopqrstuvwxyz.....................................................................................................................................";
 
@@ -117,10 +110,6 @@ void reset_salt(char *E){
 	}
 }
 
-int is_register(int cipher_bit){
-	return 1;
-}
-
 void cl_set_salt(uint8_t *salt_in, char *E_cl)
 {
 	char E[96];
@@ -192,10 +181,13 @@ void cl_setup_shared_key(cl_key_char *key, char *cl){
 	
 }
 
+//How many searches to do before checking for a hit
+//Checking hits requires waiting for a read and therefore chips into getting full usage of the gpu,
+//so i don't do that every time.
 #define BATCH_SIZE 100
 
 /*
- * Infinitely searches random ASCII keys
+ * Infinitely searches random Japanese Shift-JIS keys
  */
 int do_search(int gpu){
 	cl_key_char shared_key[9];
@@ -214,10 +206,12 @@ int do_search(int gpu){
 	//Will contain a list of defines to pass to the opencl compiler
 	//Instead of having another level of indirection with the extension matrix, i'll just
 	//hardcode it and recompile when it needs to change.
-	//So long as recompilation is rare enough, this is rewarding depsite the need for recompilation.
+	//So long as recompilation is rare enough, this is greatly rewarding.
 	char E_cl[2048];
+	
 	//Will contain defines on the bits of a shared key
 	char K_cl[2048*2];
+	
 	//Will contain a few configurations related to wdict
 	char wdict_config[1024];
 	
@@ -232,7 +226,7 @@ int do_search(int gpu){
 	
 	//the type and value of the third shared key limits the possible values
 	//of the following keys. I deal with this by generating ALL the possible keys
-	//and then to avoid any duplicate keys i simply i pick a not previously used
+	//and then to avoid any duplicate keys i simply pick a not previously used
 	//entry from this list.
 	uint32_t backup = shared_key[2].key;
 	number_of_possible_keys = generate_all(shared_key, &possible_keys);
@@ -257,7 +251,6 @@ int do_search(int gpu){
 	
 	/* Build Kernel Program */
 	ret = clBuildProgram(program, 1, &device_id, "-cl-opt-disable", NULL, NULL);
-	//return;
 	if(ret){
 	    char buildString[100000];
 	    buildString[0]='\0';
@@ -266,7 +259,6 @@ int do_search(int gpu){
 	}
 
 	/* Create OpenCL Kernel */
-	//HandleErrorPar(kernel = clCreateKernel(program, "crypt25", HANDLE_ERROR));
 	
 	kernel = cl_create_kernel(program, "crypt25");
 	inc_kernel = cl_create_kernel(program, "inc_key_offset");
@@ -302,7 +294,7 @@ int do_search(int gpu){
 	//buffer allocated for keys will also contain three other parameters
 	//because adding any more parameters past 6 causes a slowdown on my AMD 7850...
 	//Haven't tested if that still happens on newer drivers, though. Must be an opencl
-	//compiler quirk 
+	//compiler quirk?
 	uint32_t keys_and_extra_size = 
 			keys_size
 		+	key_end_index_size
@@ -355,7 +347,7 @@ int do_search(int gpu){
         memset(keys_sliced,0,keys_size);
 		memset(keys_coalesced,0,keys_size);
 		
-		//Generate pseudorandom shift-jis keys
+		//Select a shift-jis key
 		for(b=0; b<n*32; b++){
 			keys[b*8+0] = shared_key[0];
 			keys[b*8+1] = shared_key[1];
@@ -435,26 +427,8 @@ int do_search(int gpu){
     return 0;
 }
 
-void cl_configure_b(char *regs, char *cl){
-	//Should probably make some benchmark to determine how many registers to use...
-	int regcount = 64;
-	int i = 0;
-	for(; i < 64; i++){
-		regs[i] = i < regcount;
-		if(regs[i]){
-			cl += sprintf(cl, "#define b%d b(%d)\n",i,i);
-		}
-		else{
-			cl += sprintf(cl, "#define b%d lb(%d)\n",i,i-regcount);
-		}
-	}
-	
-	cipher_registers = regcount;
-}
-
 int gpu_init(uint32_t seed){
     srand(time(NULL));
-	cl_configure_b(B_reg, B_cl);
 	cl_key_init(seed);
 	wdict_setup_gpu(&dictpool, &wdk_pool, &wdw_pool,
 					&dictpool_size, &wdksize, &wdwsize,

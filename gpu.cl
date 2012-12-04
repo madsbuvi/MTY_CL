@@ -38,8 +38,7 @@ typedef long	int64_t;
  * as hell and i'll never use them. Should either move on to
  * make it more general again, or remove completely...
  */
-typedef uint32_t type;
-#define BITS 8*sizeof(type)
+#define BITS 8*sizeof(uint32_t)
 
 #define lsize 128
 
@@ -192,12 +191,6 @@ __constant int keyperm[0x300] = {
 	44, 15, 16, 0, 49, 28
 };
 
-#define base_count 196
-__constant uint count[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 161, 145, 134, 98, 0, 0, 87, 94, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 145, 188, 188, 188, 188, 188, 188, 188, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 100, 0, 0, 0, 0, 0, 188, 188, 188, 188, 188, 188, 188, 188, 188, 188, 0, 0, 0, 0, 0, 0};
-__constant uint stype[256] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0};
-__constant uint base_chars[256] = { 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 251, 252, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-
 #if debugprints
 
 __constant int tr_fp[64 + 2] =
@@ -224,18 +217,13 @@ __constant int tr_sub[64] = {
 	'k','l','m','n','o','p','q','r',
 	's','t','u','v','w','x','y','z'
 };
-#if asdasd
-__constant uint32_t testtrip[8] = {
-	0x36, 0x2A, 0xB6, 0x35, 0xA2, 0x88, 0xE9, 0x24
-};
-#endif
+
 /*
  * defines to save typing and make kernel code more readable
  */
 #define key(x) keys[(x)*size+index]
 #define lk(x)  lkeys[(x)*lsize]
 #define temps(x) temporaries[(x)*size+index]
-#define ku(x) key_used[(x)*size+index]
 #define lb(x) lblock[(x)*lsize + lindex]
 #define rb(x) rblock[(x)*lsize]
 #define work_area(x) lmem[(x)*lsize+lindex]
@@ -243,7 +231,7 @@ __constant uint32_t testtrip[8] = {
 
 #define SWAP(a,b) \
 { \
-	type swap = a; \
+	uint32_t swap = a; \
 	a = b; \
 	b = swap; \
 }
@@ -251,11 +239,11 @@ __constant uint32_t testtrip[8] = {
 
 
 void store_hit(
-						uint64_t hash,
+						uint64_t hash, //Was included for debug prints, TODO: Remove
 						uint32_t slice_index,
 						__global uint32_t *hits,
 						__global uint32_t *hit_bool,
-						uint key1, uint key2){
+						uint32_t key1, uint32_t key2){
 						
 	int index = get_global_id(0);
     int size = get_global_size(0);
@@ -271,17 +259,9 @@ void store_hit(
 	hits[index] = (key2<<8)|key1;
 }
 
-#define P1 ((ulong)16807)
-#define P2 ((ulong)0)
-#define N ((ulong)2147483647)
-
-inline ulong next_int(ulong x){
-	return (P1*x+P2)%N;
-}
-
-__kernel void crypt25(__global uint *keys,	//First 6 characters of each key
-                      __global type *key_ends,//Space to back-up hashes
-					  __global type *gwa,	//Global Work Area for Quine-McCluskey's method
+__kernel void crypt25(__global uint32_t *keys,	//First 6 characters of each key, first 3 not really used
+                      __global uint32_t *key_ends,//List of all possible last 2 characters of each key
+					  __global uint32_t *gwa,	//Global Work Area for Quine-McCluskey's method
 					  __global struct WDICT *g_dictpool,	//Dictionaries for the search
 					  __global struct WDK * wdk_pool,		//Wdk entries
 					  __global struct WDW * wdw_pool		//Words of all dictionaries
@@ -299,14 +279,14 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	//Performance would plunge if i had too many parameters... register spilling? That doesn't seem right...
 
 	/** Regular parameters **/
-	__global type *key_end_index;
+	__global uint32_t *key_end_index;
 	
 	key_end_index = keys + 56*size;
 	
 	
 	/** Hit parameters **/
 	//These parameters are used only in the case of an actual hit. Don't care
-	//about performance in these cases.
+	//about performance in these cases so i don't care to make them nicely aligned to anything
 	
 	__global uint32_t *hit_bool;//saves the host from having to read the
 								//entire hits array when there are no hits.
@@ -317,8 +297,8 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	hits = hit_bool + 1;
 	
 									
-	//Keep block in registers while performing hash.
-	type b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, b34, b35, b36, b37, b38, b39, b40, b41, b42, b43, b44, b45, b46, b47, b48, b49, b50, b51, b52, b53, b54, b55, b56, b57, b58, b59, b60, b61, b62, b63;
+	//Keep block (ciphertext) in registers while performing hash.
+	uint32_t b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, b34, b35, b36, b37, b38, b39, b40, b41, b42, b43, b44, b45, b46, b47, b48, b49, b50, b51, b52, b53, b54, b55, b56, b57, b58, b59, b60, b61, b62, b63;
 	
 	
 	
@@ -326,7 +306,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	__local int lmem[0x2000];
 	
 	//Pointer to this thread's key slices.
-	__local type *lkeys = (__local type *)(lmem+lindex);
+	__local uint32_t *lkeys = (__local uint32_t *)(lmem+lindex);
 	
 	//Copy host-determined key slice
 	for(int i = 0; i < 21; i++){
@@ -334,15 +314,11 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 		lk(i) = key(i+21);
 	}
 	
-	//Set the keys and update the current state/seed of the random
-	//number generator.
-	uint key1, key2, key_index;
+	//Set the last two characters
+	uint32_t key1, key2, key_index;
 	key_index = *key_end_index;
 	key1 = key_ends[key_index*2+0];
 	key2 = key_ends[key_index*2+1];
-	//printi(key1);
-	//printi(key2);
-	//printi(key_index);
 	
 	lk(21) = -((key1>>0)&1);
 	lk(22) = -((key1>>1)&1);
@@ -362,16 +338,17 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
     //Zero the blocks
 	b0 = 0; b1 = 0; b2 = 0; b3 = 0; b4 = 0; b5 = 0; b6 = 0; b7 = 0; b8 = 0; b9 = 0; b10 = 0; b11 = 0; b12 = 0; b13 = 0; b14 = 0; b15 = 0; b16 = 0; b17 = 0; b18 = 0; b19 = 0; b20 = 0; b21 = 0; b22 = 0; b23 = 0; b24 = 0; b25 = 0; b26 = 0; b27 = 0; b28 = 0; b29 = 0; b30 = 0; b31 = 0; b32 = 0; b33 = 0; b34 = 0; b35 = 0; b36 = 0; b37 = 0; b38 = 0; b39 = 0; b40 = 0; b41 = 0; b42 = 0; b43 = 0; b44 = 0; b45 = 0; b46 = 0; b47 = 0; b48 = 0; b49 = 0; b50 = 0; b51 = 0; b52 = 0; b53 = 0; b54 = 0; b55 = 0; b56 = 0; b57 = 0; b58 = 0; b59 = 0; b60 = 0; b61 = 0; b62 = 0; b63 = 0;
 	//Perform the DES algorithm
-	type a1=0, a2=0, a3=0, a4=0, a5=0, a6=0;
+	uint32_t a1=0, a2=0, a3=0, a4=0, a5=0, a6=0;
 	barrier(CLK_LOCAL_MEM_FENCE);
 	int iterations = 25;
 	while(iterations--){
 		SWAP(b0,b32); SWAP(b1,b33); SWAP(b2,b34); SWAP(b3,b35); SWAP(b4,b36); SWAP(b5,b37); SWAP(b6,b38); SWAP(b7,b39); SWAP(b8,b40); SWAP(b9,b41); SWAP(b10,b42); SWAP(b11,b43); SWAP(b12,b44); SWAP(b13,b45); SWAP(b14,b46); SWAP(b15,b47); SWAP(b16,b48); SWAP(b17,b49); SWAP(b18,b50); SWAP(b19,b51); SWAP(b20,b52); SWAP(b21,b53); SWAP(b22,b54); SWAP(b23,b55); SWAP(b24,b56); SWAP(b25,b57); SWAP(b26,b58); SWAP(b27,b59); SWAP(b28,b60); SWAP(b29,b61); SWAP(b30,b62); SWAP(b31,b63);
-		DES
+		
+		DES //des.cl
 	}
 	
-	 barrier(CLK_LOCAL_MEM_FENCE);
-	 type x0,x1,x2,x3,x4,x5,x6,x7;
+	barrier(CLK_LOCAL_MEM_FENCE);
+	uint32_t x0,x1,x2,x3,x4,x5,x6,x7;
 		
 	//Defines printed to cmp.cl by synth.c implement the logic gates generated by quine mclusky's method.
 	
@@ -401,8 +378,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	
 	//Mask detailing potential hits
 	x0 = work0;
-	//Mask detailing actual hits that could
-	//be determined by Quine-McCluskey's method
+	//Mask detailing actual hits that could be determined
 	x1 = work1;
 	
 	
@@ -422,6 +398,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 	lb(dest) = b##src;
 
 	//Perform FP and first step of matrix transmutation in one.
+	//But only do it if we could not prove that there won't be a hit.
 	if(x0){
 		{
 			SDW(14, 27, 0);
@@ -497,44 +474,13 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 		//potential finds are stored in Local memory, but are also
 		//paired together with their old index which will be needed~
 
-		for(type i = 0; i < 8*sizeof(type); i++){
-			if(x0&((type)1<<i)){
-				if(x1&((type)1<<i)){
+		for(uint32_t i = 0; i < 8*sizeof(uint32_t); i++){
+			if(x0&((uint32_t)1<<i)){
+				if(x1&((uint32_t)1<<i)){
 					store_hit(lb(i), i, hits, hit_bool, key1, key2);
-					
 				}
 				else {
-					
-					
-#if debugprints
-	printf("POTENTIAL Hit was made in slice %d\n",i);
-	printf("Key end is: %x %x\n",key1, key2);
-	printf("Trips:\n");
-	for(int j=0; j<32;j++){
-		printf("%d: ",j);
-		uint64_t faggot = lb(j);
-		for(int i=0; i<10; i++){
-			printf("%c",tr_sub[(faggot>>(6*i))&63]);
-		}
-		printf("\n");
-		uint key[9];
-		key[8] = '\0';
-
-		
-		for(int a=3; a < 8; a++){
-			int k = 0;
-			int bit = 0;
-			for(int b = 0; b < 7; b++){
-				bit = (key(a*7+b)&(1<<j))?1:0;
-				k |= bit<<b;
-			}
-			key[a] = k;
-		}
-		printf("Key: %x %x %x %x %x %x %x %x\n",key[0],key[1],key[2],key[3],key[4],key[5],key[6],key[7]);
-		printf("Key: %x %x %x %x %x %x %x %x\n",key0_key,key1_key,key2_key,key[3],key[4],key[5],key[6],key[7]);
-	}
-#endif
-					lb(31-potential_finds) = i;
+					gwork_area(21+potential_finds) = i;
 					lb(potential_finds++)=lb(i);
 				}	
 			}
@@ -549,7 +495,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 			uint64_t norm = normalise(item);
 			
 			//start search
-			int hindex = lb(31-potential_finds);
+			int hindex = gwork_area(21+potential_finds);
 			//Iterate over the valid dictionaries.
 			for(int p = MIN_DICTPOOL; p < N_DICTPOOL; p++){
 				__global struct WDICT *pd = &g_dictpool[p];
@@ -557,7 +503,7 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 				int len = pd->len;
 				
 				//If there is a potential hit in this dictionary
-				if(len > 0 && (gwork_area(p) & ((type)1<<hindex))){
+				if(len > 0 && (gwork_area(p) & ((uint32_t)1<<hindex))){
 					uint64_t m;
 					uint32_t k = ((norm >> 6 * ((pd->pos - 1) + len - HASH_NCHARS))
 								& ((1 << 6 * HASH_NCHARS) - 1));
@@ -644,15 +590,15 @@ __kernel void crypt25(__global uint *keys,	//First 6 characters of each key
 			}
 		}
 	}
-	#if 0
-	#endif
 }
 
-__kernel void inc_key_offset(__global uint *keys){
+//Used as a global synchronization point. If this was done in the crypt25 kernel there would be no way
+//to guarantee this wasn't done before one or more wavefronts ever wrote their own last keys. Although it seems unlikely.
+__kernel void inc_key_offset(__global uint32_t *keys){
     int index = get_global_id(0);
 	int size = get_global_size(0);
 	if(!index){
-		__global type *key_end_index;
+		__global uint32_t *key_end_index;
 		key_end_index = keys + 56*size;
 		key_end_index[0]++;
 	}

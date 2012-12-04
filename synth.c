@@ -50,7 +50,7 @@ void cl_declare_regs(const char *base_name, int count){
 	assert(base_name != NULL);
 	if(!count)return;
 	char buffer[2048];
-	int len = sprintf(buffer, "type %s0",base_name);
+	int len = sprintf(buffer, "uint32_t %s0",base_name);
 	fwrite(buffer, 1, len, clfp);
 	int i;
 	for(i = 1; i < count; i++){
