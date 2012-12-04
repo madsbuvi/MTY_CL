@@ -32,7 +32,7 @@ But it was released on his sourceforge claiming GPL, so at least redistribution 
 
 Changelog
 ---------
-0.31. - Further speedup (1.25x). No more duplicates.
+0.31. - Further speedup (1.25x). //No more duplicates.// Well it seems it does still happen, but rarely enough.
 
 0.30. - Shift_JIS keys. Key selection makes a lot of duplicates.
 
