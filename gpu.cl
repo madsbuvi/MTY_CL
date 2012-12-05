@@ -536,7 +536,7 @@ __kernel void crypt25(__global uint32_t *keys,	//First 6 characters of each key,
 					}
 					if(!found_first)continue;
 					//found first, perform binary search for secondary key.
-					m = (norm >> 6 * (pd-> pos - 1)) & ((1ULL << 6 * pd->len) - 1);
+					m = (norm >> 6 * (pd-> pos - 1)) & ((((uint64_t)1) << 6 * pd->len) - 1);
 					
 					ia = i?(wdk_pool[i-1+pd->wdk].i):(0);
 
@@ -552,7 +552,7 @@ __kernel void crypt25(__global uint32_t *keys,	//First 6 characters of each key,
 							//We found the secondary key!
 							//This is such a rare case that the remainder of the search
 							//is not optimized, and is sequential.
-							x = ((item >> 6 * (pd->pos - 1)) & ((1ULL << 6 * pd->len) - 1));
+							x = ((item >> 6 * (pd->pos - 1)) & ((((uint64_t)1) << 6 * pd->len) - 1));
 							//printf("Found secondary key.\nx: %I64u\nitem: %I64u\npos: %d\nlen: %d\n",x,item,pd->pos, pd->len);
 							for(j = i;
 									j < pd->nwords

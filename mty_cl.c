@@ -252,9 +252,9 @@ int do_search(int gpu){
 	/* Build Kernel Program */
 	ret = clBuildProgram(program, 1, &device_id, "-cl-opt-disable", NULL, NULL);
 	if(ret){
-	    char buildString[100000];
+	    char buildString[5000000];
 	    buildString[0]='\0';
-        HandleErrorRet(clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, sizeof(char) * 100000, buildString, NULL));
+        HandleErrorRet(clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, sizeof(buildString), buildString, NULL));
         printf("build log:\n%s\n", buildString);
 	}
 
