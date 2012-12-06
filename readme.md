@@ -29,6 +29,17 @@ However, i've also made a GUI wrapped for Chapuni's version that runs on all VLI
 The release of MTY that used VLIW AMD/ATI Architectures was unfortunately only released in closed source.
 But it was released on his sourceforge claiming GPL, so at least redistribution should be ok.
 
+Performance
+-----------
+In terms of potential operations per second, the GCN architecture is a step down from the VLIW architectures. AMD has chosen to sacrifice
+some of the brilliant potential number of operations per second obtainable in the VLIW architectures, for a more manageable ISA (the new is scalar, rather than VLIW).
+Therefore it is expected that a 7xxx card will have lower performance for some applications than the equivalent 6xxx card.
+
+MTY CL obtains up to 125 million trips / second on my own Radeon HD 7850, which by calculation is about 45% of the potential throughput.
+By comparison, Chapuni's MTY, obtains about 75 million trips / second on my Radeon HD 4870. Which by the same calculation is approximately 40% of the potential throughput.
+The calculation is (obtained throughput)/((Potential operations * bitslices)/(Operations required by one bitsliced crypt(3) procedure))
+Operations required by one bitsliced crypt(3) procedure is 202 000, counting only ALU operations (counting gates in each S-box as well as the 6 XOR operations involving the keys).
+Which gives (125000000)/((1761000000000*32)/(202000)) = 0.45 and (75000000)/((1200000000000*32)/(202000)) = 0.40
 
 Changelog
 ---------
