@@ -43,7 +43,7 @@ Which gives (125000000)/((1761000000000*32)/(202000)) = 0.45 and (75000000)/((12
 
 Bugs
 ----
-It seems the code will still (ir)regularly generate duplicate tripcodes. Should be fixed sooner or later. This is due to an issue with my method of selecting valid shift-jis keys within a limited length, and a separate run is not likely to generate the same keys as a previous run.
+It seems the code will still (ir)regularly generate duplicate tripcodes. Should be fixed sooner or later. This is due to an issue with my method of selecting valid shift-jis keys within a limited length, and a separate run is not likely to generate the same keys as a previous run (meaning they aren't weak / easy to crack).
 Don't hesitate to contact me or open an issue if you have any problems with the program.
 
 Changelog
