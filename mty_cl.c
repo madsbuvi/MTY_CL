@@ -197,7 +197,7 @@ int do_search(int gpu){
 	cl_mem keys_and_extra_gpu, key_ends_gpu, wa_gpu, g_dictpool_gpu,
 	wdk_gpu, wdw_gpu;
 	cl_program program = NULL;
-	cl_kernel kernel = NULL, inc_kernel = NULL;
+	cl_kernel kernel = NULL, inc_kernel = NULL, clear_kernel = NULL;
 	cl_int ret;
 	uint8_t salt[2], *possible_keys, *used_keys;
 	uint32_t number_of_possible_keys;
@@ -230,7 +230,7 @@ int do_search(int gpu){
 	//entry from this list.
 	uint32_t backup = shared_key[2].key;
 	number_of_possible_keys = generate_all(shared_key, &possible_keys);
-	used_keys = (uint8_t *)calloc(possible_keys, sizeof(uint8_t));
+	used_keys = (uint8_t *)calloc(number_of_possible_keys, sizeof(uint8_t));
 	shared_key[2].key = backup;
 	
 	len_wdict_config = sprintf(wdict_config,
@@ -262,6 +262,7 @@ int do_search(int gpu){
 	
 	kernel = cl_create_kernel(program, "crypt25");
 	inc_kernel = cl_create_kernel(program, "inc_key_offset");
+	clear_kernel = cl_create_kernel(program, "clear_hits");
 	
 	/* Gather information about host and device */
 	uint32_t max_compute_units = 0;
@@ -285,9 +286,9 @@ int do_search(int gpu){
 		
 	
 	//host-size buffers for the structures used to transfer founds keys back to host.
-	uint32_t *hit_bool, *hits,
+	uint32_t *hit_bool,
 		hit_bool_size = sizeof(uint32_t),
-		hits_size = BATCH_SIZE*n*sizeof(uint32_t)*32, //This is where the bulk of the memory usage of this program comes from
+		hits_size = BATCH_SIZE*n*sizeof(uint32_t)*32,
 		hit_bool_offset = key_end_index_offset+key_end_index_size,
 		hits_offset = hit_bool_offset + hit_bool_size;
 	
@@ -298,19 +299,17 @@ int do_search(int gpu){
 	uint32_t keys_and_extra_size = 
 			keys_size
 		+	key_end_index_size
-		+	hit_bool_size
-		+	hits_size;
+		+	hit_bool_size;
 		
 	//Allocate memory
 	keys_coalesced = (uint32_t*)calloc(keys_and_extra_size, 1);
 	hit_bool = (void *)keys_coalesced+hit_bool_offset;
-	hits = (void *)keys_coalesced+hits_offset;
 
 	assert(keys_coalesced != NULL /*too little memory*/);
 	
 	
 	/* Allocate memory on gpu */
-	keys_and_extra_gpu = cl_malloc(context, keys_and_extra_size);
+	keys_and_extra_gpu = cl_malloc(context, keys_and_extra_size + hits_size);
     key_ends_gpu = cl_malloc(context, 128*128*2*sizeof(uint32_t) + 32*64*n*sizeof(uint32_t));
 	g_dictpool_gpu = cl_malloc(context, dictpool_size*2);
 	wdk_gpu = cl_malloc(context, wdksize*2);
@@ -327,7 +326,9 @@ int do_search(int gpu){
     /* Set as arguments */
     HandleErrorRet(clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&keys_and_extra_gpu));
     HandleErrorRet(clSetKernelArg(inc_kernel, 0, sizeof(cl_mem), (void *)&keys_and_extra_gpu));
+    HandleErrorRet(clSetKernelArg(clear_kernel, 0, sizeof(cl_mem), (void *)&keys_and_extra_gpu));
     HandleErrorRet(clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&key_ends_gpu));
+    HandleErrorRet(clSetKernelArg(clear_kernel, 1, sizeof(uint32_t), (void *)&hits_size));
     HandleErrorRet(clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&wa_gpu));
 	HandleErrorRet(clSetKernelArg(kernel, 3, sizeof(cl_mem), (void *)&g_dictpool_gpu));
     HandleErrorRet(clSetKernelArg(kernel, 4, sizeof(cl_mem), (void *)&wdk_gpu));
@@ -340,8 +341,8 @@ int do_search(int gpu){
 	set_start_time();
 	keys = calloc(8*32*n, sizeof(cl_key_char));
 	keys_sliced = calloc(8*32*n, sizeof(uint32_t));
-
 	uint32_t prng_state = usec();
+				HandleErrorRet(clEnqueueNDRangeKernel(command_queue, clear_kernel, 1, NULL, &n, &work_group_size, 0, NULL, NULL));
     for(a=0; a<length; a++){
 		//Reset keys
         memset(keys_sliced,0,keys_size);
@@ -388,17 +389,18 @@ int do_search(int gpu){
 			register_trips_generated(gpu, BATCH_SIZE*n*32);
 			if(*hit_bool){
 				*hit_bool = 0;
-				//Copy 
-				cl_copy_from(keys_and_extra_gpu, hits, hits_size, hits_offset, command_queue);
 
-				//Examine hits
-				for(c=0; c<n*BATCH_SIZE*32; c++){
-					examine(hits[c], keys+(8*(c/BATCH_SIZE)),(c/BATCH_SIZE));
-					hits[c] = 0;
+				uint32_t work[32*n];
+				uint32_t i,j;
+				for(i = 0; i < BATCH_SIZE; i++){
+					cl_copy_from(keys_and_extra_gpu, work, sizeof(work), hits_offset+sizeof(work)*i, command_queue);
+					for(j = 0; j < 32*n; j++){
+						uint32_t working_key = (i*32*n + j)/BATCH_SIZE;
+						examine(work[j], keys + 8*working_key, working_key);
+					}
 				}
 				
-				//Reset
-				cl_copy_to(keys_and_extra_gpu, hit_bool, hit_bool_size+hits_size, hit_bool_offset, command_queue);
+				HandleErrorRet(clEnqueueNDRangeKernel(command_queue, clear_kernel, 1, NULL, &n, &work_group_size, 0, NULL, NULL));
 
 			}
 		}
