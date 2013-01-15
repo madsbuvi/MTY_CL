@@ -7,7 +7,7 @@ This project is also released under GPL.
 
 Usage
 -----
-1. Download the [latest release](https://github.com/downloads/madsbuvi/MTY_CL/mty_cl_031.rar).
+1. Download the [latest release](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_032.rar).
 2. Start mty_gui.exe
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
 4. Click 'Start Search'.
@@ -17,7 +17,7 @@ Usage
 
 Releases
 --------
-Current version is 0.31: [link](https://github.com/downloads/madsbuvi/MTY_CL/mty_cl_031.rar)
+Current version is 0.32: [link](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_032.rar)
 
 
 Supported architectures
