@@ -1,5 +1,7 @@
 MTY CL
 ======
+!!NB!! program is broken for AMD drivers 13.1 and has sharply reduced performance in beta drivers 13.2, use earlier drivers!
+
 
 A utility for generating custom tripcodes on various imageboards, utilising GPGPU Via OpenCL for faster generating.
 Based on Chapuni's [MTY](http://naniya.sourceforge.jp/), released under GPL.
