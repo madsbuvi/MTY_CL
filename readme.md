@@ -19,8 +19,9 @@ Usage
 
 Releases
 --------
-Current version is 0.32: [link](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_032.rar)
-
+Current version is 0.32:
+[Github](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_032.rar)
+[Mediafire](http://www.mediafire.com/download.php?5mqp9wbo82uc5ms)
 
 Supported architectures
 -----------------------
