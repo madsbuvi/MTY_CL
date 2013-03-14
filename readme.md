@@ -23,6 +23,9 @@ Current version is 0.32:
 [Github](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_032.rar)
 [Mediafire](http://www.mediafire.com/download.php?5mqp9wbo82uc5ms)
 
+Original Mtycal with ui:
+[Mediafire](http://www.mediafire.com/download.php?27p2lir4kedb721)
+
 Supported architectures
 -----------------------
 Currently only GCN (Graphics Core Next), used in Souther Islands gpu's (AMD Radeon HD 77xx-79xx).
