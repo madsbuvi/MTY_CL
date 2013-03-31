@@ -1,7 +1,8 @@
 MTY CL
 ======
 !!NB!! program is broken for AMD drivers 13.1 and has sharply reduced performance in beta drivers, use earlier drivers!
-When reverting to an older driver version you also have to manually delete a bunch of DLLs, since the installation program won't deal with them all automatically. A quick google search should give you a nice how-to.
+
+Note that when reverting to an older driver version you also have to manually delete a bunch of DLLs, since the installation program won't deal with them all automatically. A quick google search should give you a nice how-to.
 
 A utility for generating custom tripcodes on various imageboards, utilising GPGPU Via OpenCL for faster generating.
 Based on Chapuni's [MTY](http://naniya.sourceforge.jp/), released under GPL.
