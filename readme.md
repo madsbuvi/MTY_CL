@@ -1,8 +1,8 @@
 MTY CL
 ======
-!!NB!! program is broken for AMD drivers 13.1 and has sharply reduced performance in beta drivers, use earlier drivers!
+!!NB!! program is broken for AMD drivers 13.x
 
-Note that when reverting to an older driver version you also have to manually delete a bunch of DLLs, since the installation program won't deal with them all automatically. A quick google search should give you a nice how-to.
+Note that when reverting to an older driver version you also have to manually delete a bunch of DLLs, since the installation program won't deal with them all automatically. The program "driver fusion" should help with this.
 
 A utility for generating custom tripcodes on various imageboards, utilising GPGPU Via OpenCL for faster generating.
 Based on Chapuni's [MTY](http://naniya.sourceforge.jp/), released under GPL.
@@ -50,15 +50,16 @@ Which gives (125000000)/((1761000000000*32)/(202000)) = 0.45 and (75000000)/((12
 
 Bugs
 ----
-On AMD drivers 13.1 the code appears completely broken. Visual artifacts, extremely poor performance and garbage output.
-Drivers before 13.1 should work, and beta drivers generate correct tripcodes albeit slowly. The issue has been reported to AMD and was passed onto the OpenCL devs, so hopefully the next
-stable driver will fix the issue.
+On AMD drivers 13.x the code appears completely broken. Visual artifacts, extremely poor performance and/or garbage output depending on which driver.
+Drivers before 13.1 should work. The issue has been reported to AMD...
 
 It seems the code will still (ir)regularly generate duplicate tripcodes. Should be fixed sooner or later. This is due to an issue with my method of selecting valid shift-jis keys within a limited length, and a separate run is not likely to generate the same keys as a previous run (meaning they aren't weak / easy to crack).
 Don't hesitate to contact me or open an issue if you have any problems with the program.
 
 Changelog
 ---------
+0.32. - Fixed a crash
+
 0.31. - Further speedup (1.25x). //No more duplicates.// Well it seems it does still happen, but rarely enough.
 
 0.30. - Shift_JIS keys. Key selection makes a lot of duplicates.
