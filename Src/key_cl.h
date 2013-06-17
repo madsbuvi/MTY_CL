@@ -1,5 +1,7 @@
 #include <stdint.h>
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 typedef struct{
 	uint32_t key;
 	uint32_t index;
@@ -7,21 +9,23 @@ typedef struct{
 	uint32_t base;
 } cl_key_char;
 
-//Setup variables and tables
+//! \brief Setup variables and tables
 void cl_key_init();
 
-//Reset a key to a new random valid sjis-key
+//! \brief Reset a key to a new random valid sjis-key
 void cl_key_random(cl_key_char *key, int n);
-//Reset a key to the numerically lowest valid
+//! \brief Reset a key to the numerically lowest valid key
 void cl_key_reset(cl_key_char *key, int n);
+
 
 //Increment a key to the next valid sjis-key (not used)
 int cl_key_inc_single(cl_key_char *key, int n);
 void cl_key_inc(cl_key_char *key, int m);
 
+/*
 //Make a copy of the sjis tables for use outside key_cl.c
 void copy_sjis_tables(uint32_t *target);
-
+*/
 //The two last characters of each tripcode is randomly generated
 //in the gpu. If the last byte is of type 2 (first character of
 //a 2-byte sjis character), we have to add a final byte.

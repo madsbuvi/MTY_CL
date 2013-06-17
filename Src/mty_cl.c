@@ -14,6 +14,7 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+#include <pthread.h>
 #include "desconst.h"
 #include "mty_cl.h"
 #include "cl_util.h"
@@ -29,8 +30,8 @@ void *dictpool,*wdk_pool,*wdw_pool;
 int32_t dictpool_size, wdksize, wdwsize, min_dictpool, n_dictpool;
 
 //Sources
-char *source_crypt, *source_sboxdef, *source_cmp,  *source_des;
-size_t len_crypt, len_sboxdef, len_cmp, len_wdict_config, len_des;
+char *source_crypt, *source_sboxdef, *source_cmp,  *source_des, *source_transpose;
+size_t len_crypt, len_sboxdef, len_cmp, len_wdict_config, len_des, len_transpose;
 
 //List of all possible two last characters
 uint32_t *end_keys, num_end_keys;
@@ -65,18 +66,16 @@ void init_ksp(uint32_t *KSp){
 //Sets a key to all slices.
 void set_key(uint32_t *key, uint8_t *plaintext, int32_t length){
 	uint32_t mask;
-	uint32_t zero,one,a,b;
-	zero = 0;
-	one = ~zero;
+	uint32_t a,b;
 	for(a=6,b=0;b<length;b++){
 		mask = 1<<6;
-		key[a]=(plaintext[b]&mask)>0?one:zero;a--;mask>>=1;
-		key[a]=(plaintext[b]&mask)>0?one:zero;a--;mask>>=1;
-		key[a]=(plaintext[b]&mask)>0?one:zero;a--;mask>>=1;
-		key[a]=(plaintext[b]&mask)>0?one:zero;a--;mask>>=1;
-		key[a]=(plaintext[b]&mask)>0?one:zero;a--;mask>>=1;
-		key[a]=(plaintext[b]&mask)>0?one:zero;a--;mask>>=1;
-		key[a]=(plaintext[b]&mask)>0?one:zero;a--;mask>>=1;
+		key[a]=(plaintext[b]&mask)>0?-1:0;a--;mask>>=1;
+		key[a]=(plaintext[b]&mask)>0?-1:0;a--;mask>>=1;
+		key[a]=(plaintext[b]&mask)>0?-1:0;a--;mask>>=1;
+		key[a]=(plaintext[b]&mask)>0?-1:0;a--;mask>>=1;
+		key[a]=(plaintext[b]&mask)>0?-1:0;a--;mask>>=1;
+		key[a]=(plaintext[b]&mask)>0?-1:0;a--;mask>>=1;
+		key[a]=(plaintext[b]&mask)>0?-1:0;a--;mask>>=1;
 		a+=14;
 	}
 }
@@ -85,19 +84,17 @@ void set_key(uint32_t *key, uint8_t *plaintext, int32_t length){
 //Presumes that the slice is already cleared
 void set_key_line(uint32_t *key, uint8_t *plaintext, uint32_t line, int32_t length){
 	uint32_t mask;
-	uint32_t zero,one,a,b;
+	uint32_t a,b;
 	line = 1u << line;
-	zero = 0;
-	one = ~zero;
 	for(a=6,b=0;b<length;b++){
 		mask = 1<<6;
-		key[a]|=line&((plaintext[b]&mask)>0?one:zero);a--;mask>>=1;
-		key[a]|=line&((plaintext[b]&mask)>0?one:zero);a--;mask>>=1;
-		key[a]|=line&((plaintext[b]&mask)>0?one:zero);a--;mask>>=1;
-		key[a]|=line&((plaintext[b]&mask)>0?one:zero);a--;mask>>=1;
-		key[a]|=line&((plaintext[b]&mask)>0?one:zero);a--;mask>>=1;
-		key[a]|=line&((plaintext[b]&mask)>0?one:zero);a--;mask>>=1;
-		key[a]|=line&((plaintext[b]&mask)>0?one:zero);a--;mask>>=1;
+		key[a]|=line&((plaintext[b]&mask)>0?-1:0);a--;mask>>=1;
+		key[a]|=line&((plaintext[b]&mask)>0?-1:0);a--;mask>>=1;
+		key[a]|=line&((plaintext[b]&mask)>0?-1:0);a--;mask>>=1;
+		key[a]|=line&((plaintext[b]&mask)>0?-1:0);a--;mask>>=1;
+		key[a]|=line&((plaintext[b]&mask)>0?-1:0);a--;mask>>=1;
+		key[a]|=line&((plaintext[b]&mask)>0?-1:0);a--;mask>>=1;
+		key[a]|=line&((plaintext[b]&mask)>0?-1:0);a--;mask>>=1;
 		a+=14;
 	}
 }
@@ -201,7 +198,10 @@ int do_search(int gpu){
 	cl_int ret;
 	uint8_t salt[2], *possible_keys, *used_keys;
 	uint32_t number_of_possible_keys;
+	uint8_t nvidia = 1;
 	int32_t a,b,c;
+	uint32_t work_group_size;
+	uint32_t n;
 	
 	//Will contain a list of defines to pass to the opencl compiler
 	//Instead of having another level of indirection with the extension matrix, i'll just
@@ -243,19 +243,25 @@ int do_search(int gpu){
 	init_cl_gpu_specific(gpu, &device_id, &context, & command_queue);
 
 	/* Create Kernel Program from the source */
-	const char *sources[] = {K_cl, E_cl, source_des, wdict_config, source_sboxdef, source_cmp, source_crypt};
-	const size_t lengths[] = {strlen(K_cl), strlen(E_cl), len_des, len_wdict_config, len_sboxdef, len_cmp, len_crypt};
+	const char *sources[] = {K_cl, E_cl, source_transpose, source_des, wdict_config, source_sboxdef, source_cmp, source_crypt};
+	const size_t lengths[] = {strlen(K_cl), strlen(E_cl), len_transpose, len_des, len_wdict_config, len_sboxdef, len_cmp, len_crypt};
 
 	HandleErrorPar(program = clCreateProgramWithSource(context, sizeof(lengths)/sizeof(const size_t), sources,
 	lengths, HANDLE_ERROR));
 	
 	/* Build Kernel Program */
-	ret = clBuildProgram(program, 1, &device_id, "-cl-opt-disable", NULL, NULL);
+	ret = clBuildProgram(program, 1, &device_id, "-cl-nv-verbose", NULL, NULL);
+	if(ret == 43){
+		nvidia = 0;
+		ret = clBuildProgram(program, 1, &device_id, "", NULL, NULL);
+	}
 	if(ret){
-	    char buildString[5000000];
+		uint32_t ssiz = 5000000;
+	    char *buildString = malloc(ssiz);
 	    buildString[0]='\0';
-        HandleErrorRet(clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, sizeof(buildString), buildString, NULL));
+        HandleErrorRet(clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, ssiz, buildString, NULL));
         printf("build log:\n%s\n", buildString);
+		free(buildString);
 	}
 
 	/* Create OpenCL Kernel */
@@ -267,15 +273,41 @@ int do_search(int gpu){
 	/* Gather information about host and device */
 	uint32_t max_compute_units = 0;
 	uint32_t max_work_group_size = 0;
+	uint64_t device_lmem_size = 0;
+	
+	uint32_t max_kernel_group_size = 0;
+	uint64_t kernel_lmem_size = 0;
+	uint32_t kernel_pref_size = 0;
+	uint64_t kernel_priv_size = 0;
 	size_t *program_size = 0;
 	
 	HandleErrorRet(clGetProgramInfo ( program, CL_PROGRAM_BINARY_SIZES, sizeof(program_size), &program_size, NULL));
 	HandleErrorRet(clGetDeviceInfo ( device_id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(max_compute_units), &max_compute_units, NULL));
 	HandleErrorRet(clGetDeviceInfo ( device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_work_group_size), &max_work_group_size, NULL));
+	HandleErrorRet(clGetDeviceInfo ( device_id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(device_lmem_size), &device_lmem_size, NULL));
+	HandleErrorRet(clGetKernelWorkGroupInfo  ( kernel, device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(max_kernel_group_size), &max_kernel_group_size, NULL));
+	HandleErrorRet(clGetKernelWorkGroupInfo  ( kernel, device_id, CL_KERNEL_LOCAL_MEM_SIZE, sizeof(kernel_lmem_size), &kernel_lmem_size, NULL));
+	HandleErrorRet(clGetKernelWorkGroupInfo  ( kernel, device_id, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(kernel_pref_size), &kernel_pref_size, NULL));
+	HandleErrorRet(clGetKernelWorkGroupInfo  ( kernel, device_id, CL_KERNEL_PRIVATE_MEM_SIZE, sizeof(kernel_priv_size), &kernel_priv_size, NULL));
 
 	/* Prepare test launch */
-	uint32_t work_group_size = 128;
-	uint32_t n = max_compute_units * work_group_size * 2;
+	if(nvidia){
+		work_group_size = max_kernel_group_size;
+		n = max_compute_units * work_group_size;
+	}
+	else{
+		//Shamelessly presume AMD
+		work_group_size = 64;
+		n = max_compute_units * work_group_size * 2 * 4;
+	}
+	
+	printu(max_compute_units);
+	printu(max_work_group_size);
+	printu(device_lmem_size);
+	printu(max_kernel_group_size);
+	printu(kernel_lmem_size);
+	printu(kernel_pref_size);
+	printu(kernel_priv_size);
 	
 	//host-side buffers for key related structures.
 	cl_key_char *keys;
@@ -440,6 +472,7 @@ int gpu_init(uint32_t seed){
 	source_sboxdef = (char *)readFile("./sboxdef.cl", &len_sboxdef);
 	source_cmp = (char *)readFile("./cmp.cl", &len_cmp);
 	source_des = (char *)readFile("./des.cl", &len_des);
+	source_transpose = (char *)readFile("./transpose.cl", &len_transpose);
 	assert(source_crypt!=NULL /* reading gpu source code failed */);
 	assert(len_crypt>0 /* gpu source was 0 characters long */);
 	assert(source_sboxdef!=NULL /* reading gpu source code failed */);
@@ -448,6 +481,8 @@ int gpu_init(uint32_t seed){
 	assert(len_cmp>0 /* cmp source was 0 characters long */);
 	assert(source_des!=NULL /* reading des source code failed */);
 	assert(len_des>0 /* des source was 0 characters long */);
+	assert(source_transpose!=NULL /* reading des source code failed */);
+	assert(len_transpose>0 /* des source was 0 characters long */);
 	num_end_keys = generate_all_end(&end_keys);
 	assert(num_end_keys>0);
 	assert(end_keys!=NULL);

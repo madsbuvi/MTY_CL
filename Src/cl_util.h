@@ -1,153 +1,276 @@
-/*
- * file: cl_util.h
- * 
- * Several utility functions for OpenCL
+/*! \file cl_util.h
+ *	\brief Header for the some OpenCL utility functions and macros
  *
- * Written by Mads Buvik Sandvei (https://github.com/madsbuvi/, madsbuvi@stud.ntnu.no)
- */
- #include <stdint.h>
+ *	A set of convenience macros and functions for OpenCL, written to make the API
+ *	less cumbersome for me to use.
+ *	no functions defined here return error codes, instead errors are printed and
+ *	the thread exits.
+ *
+ *	\authors Mads Buvik Sandvei
+ *	\date 2013
+ *
+ */ 
+#include <stdint.h>
 #include <CL/cl.h>
+#include <pthread.h>
 
-/*
- * Performs a binary read of the given file, saving the pointer to the buffer in source and
- * the amount of bytes read in len.
- * Part of cl util because when using opencl you frequently need to read in whole source files
- * and keep them in a buffer.
+/*! \brief Performs a binary read of the given file
+ *
+ * 	Performs a binary read of the given file.
+ *	Natural part of cl util because when using opencl you frequently need to read in whole source files
+ * 	and keep them in a buffer.
+ *
+ *	\param[in] filename path to the file to be read.
+ *	\param[out]	len	pointer to a size_t variable to store the length of the file read in.
+ *	\return	A pointer to a newly allocated buffer with the full contents of the file if successful, NULL otherwise.
  */
 int8_t *readFile(const char *filename, size_t *len);
 
-/*
+/*! \brief Get an error string based on error code
+ *
  *  Function to get an error string based on error code
  *  Copied from enj @ enja.org
+ *	
+ *	\param[in] error an OpenCL error code
+ *	\return A const string that gives a textual representation of the error.
  */
 const char* oclErrorString(cl_int error);
 
-/*
- *  Function to "handle" an error code.
+/*! \brief Function to "handle" an error code.
+ *
+ *  Does nothing other than print out the oclErrorString along with location in source of the error.
+ *
+ *	\param[in] error an OpenCL error code
+ *	\param[in] line Line number where the error occured
+ *	\param[in] file Filename of the file where the error occured
  */
 void handle_error(cl_int error, int32_t line, const  char *file);
 
 //Defines to handle errors:
 //You do not need to use semicolons after these defines, but it's a good habit.
 
-/*
+/*!	\brief Define to wrap around a function that returns error code
  *  Define to wrap around a function that returns error code
  *  E.g. HandleErrorRet(clGetPlatformIDs(1, &platform_id, &ret_num_platforms));
+ *	Call handle_error on a returned error code and then exits the current thread.
  */
 #define HandleErrorRet(clfunc)\
 {\
     cl_int error = (clfunc);\
     if(error){\
         handle_error(error, __LINE__, __FILE__);\
-        exit(-1);\
+        pthread_exit((void *)oclErrorString(error));\
     }\
 }
 
-/*
+//! \brief Alias of the error parameter for HandleErrorPar
+#define HANDLE_ERROR &error
+/*!	\brief Define to wrap around a function that returns error code to a parameter
  *  Define to wrap around a function that returns error code to a parameter
- *  Should also wrap around the assignment of the result.
- *
  *  MAKE SURE YOU PASS "HANDLE_ERROR" AS THE ERROR RETURN PARAMETER
- *
+ *	Macro should encompass the entire statement.
  *  E.G. HandleErrorPar(context = clCreateContext(NULL, 1, &device_id, NULL, NULL, HANDLE_ERROR));
  */
-#define HANDLE_ERROR &error
 #define HandleErrorPar(clfunc)\
 {\
     cl_int error;\
     (clfunc);\
     if(error){\
         handle_error(error, __LINE__, __FILE__);\
-        exit(-1);\
+        pthread_exit((void *)oclErrorString(error));\
     }\
 }
 
 
-/*
- * Function that examines whether the host is little or big endian
- * Returns 1 if little endian, 0 if big endian.
+/*! \brief Determines whether the host is big or little endian
+ *	\return 1 if little endian, 0 if big endian
  */
 int little_endian();
 
 
-/*
+/*! \Brief Random number
  * Define to wrap around the convoluted method of getting a truly random value from 0 to interval from the rand() function
  */
 #define random(interval) ((int)((double)rand() / ((double)RAND_MAX + 1) * interval))
 
-/*
+/*! \brief Random string
  * Function to generate a random ASCII string of length len. Does not allocate its own memory.
  */
 void random_string(uint8_t *string, uint64_t len);
 
-
-/*
- * printout defines for ease of debugging
+/*! \brief Initializes a single GPU
+ *
+ *  Initializes a single context for GPU. Uses whatever device it finds first.
+ *
+ *	\param[out] device_id The device ID
+ *	\param[out] context The context
+ *	\param[out] command_queue The command queue
  */
-#define prints(a) printf("%s\n", a );
-#define printi(a) printf(#a ": %d\n",a);
-#define printc(a) printf(#a ": %c\n",a);
-#define printu(a) printf(#a ": %u\n",a);
-#define printl(a) printf(#a ": %I64\n",a);
-#define printul(a) printf(#a ": %I64u\n",a);
+void init_cl_gpu_single(cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue);
 
-/*
- * Initializes a single context for GPU.
- * Handles all errors by my standards itself, no need to return anything.
+/*! \brief Initializes a single GPU with profiling enabled
+ *
+ *  Initializes a single context for GPU. Uses whatever device it finds first.
+ *
+ *	\param[out] device_id The device ID
+ *	\param[out] context The context
+ *	\param[out] command_queue The command queue
  */
- //Creates a plain context and command queue.
- void init_cl_gpu_single(cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue);
+void init_cl_gpu_single_profiling(cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue);
  
- //Creates a plain context and command queue for the specific device number.
- //(Does not use device_id as input, but output. gpu_id is the input. If there are n>gpu_id devices, it will use the nth
- // gpu it finds when going through them and their attached platform). Useful only when you want to separately initialize
- // and use each GPU and you don't care about the detais of which gpu gets what work.
- int init_cl_gpu_specific(int32_t gpu_id, cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue);
+/*! \brief Initializes a specific GPU
+ *
+ *	\param[in]	gpu_id the gpu to initialize, should be less than cl_get_num_gpus()
+ *	\param[out] device_id The device ID
+ *	\param[out] context The context
+ *	\param[out] command_queue The command queue
+ */
+int init_cl_gpu_specific(int32_t gpu_id, cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue);
  
- //Creates a plain context with a profiling-enabled command queue.
- void init_cl_gpu_single_profiling(cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue);
+
  
  
- /*
-  * Builds the variable length list of sources as a concatenated source.
-  */
- #define cl_build_all(context, device_id, program_ptr, ...)\
+/*! \brief Builds the variable length list of sources as a concatenated source.
+ *	\param[in] context A context
+ *	\param[in] device_id A device id
+ *	\param[out] program The rogram
+ *	\param[in] ... The list of sources
+ */
+#define cl_build_all(context, device_id, program_ptr, ...)\
  {\
 	char *sources[] = {__VA_ARGS__};\
 	int n_sources = sizeof(sources)/sizeof(char *);\
 	cl_build(sources, n_sources, context, device_id, program_ptr);\
 }
+
+/*! \brief Builds a list of sources into a program
+ *
+ *	Should not be called directly, rather through the cl_build_all macro
+ *	\param[in] sources list of sources
+ *	\param[in] n_sources number of sources
+ *	\param[in] context A context
+ *	\param[in] device_id A device id
+ *	\param[out] program The rogram
+ */
 void cl_build(char **sources, int n_sources, cl_context context, cl_device_id device_id, cl_program *program);
 
-/*
- * Creates an OpenCL kernel
+/*! \brief Creates an OpenCL kernel
+ *
+ *	\param[in] program The program to get the kernel from
+ *	\param[in] kernelname The name of the kernel to create
  */
- #define cl_create_kernel(program, kernelname) __cl_create_kernel__(program, kernelname, __LINE__, __FILE__)
- cl_kernel __cl_create_kernel__(cl_program program, const char *kernelname, int line, const char *file);
+#define cl_create_kernel(program, kernelname) __cl_create_kernel__(program, kernelname, __LINE__, __FILE__)
+/*! \brief Builds a list of sources into a program
+ *
+ *	Should not be called directly, rather from the cl_create_kernel() macro.
+ *	\param[in] program The program to get the kernel from
+ *	\param[in] kernelname The name of the kernel to create
+ *	\param[in] line The line the code invoked from
+ *	\param[in] file The file the code was invoked from
+ */
+cl_kernel __cl_create_kernel__(cl_program program, const char *kernelname, int line, const char *file);
 
-/*
- * Good old malloc.
+/*! \brief good old malloc for opencl
+ *
+ *	\param[in] context A context
+ *	\param[in] size	How much to allocate
+ *	\return A cl_mem object if successful, 0 otherwise.
  */
 #define cl_malloc(context, size) __cl_malloc__(context, size, __LINE__, __FILE__)
+
+/*! \brief good old malloc for opencl
+ *
+ *	Should not be called directly, rather through the cl_malloc macro
+ *
+ *	\param[in] context A context
+ *	\param[in] size	How much to allocate
+ *	\param[in] line The line the code invoked from
+ *	\param[in] file The file the code was invoked from
+ *	\return A cl_mem object if successful, 0 otherwise.
+ */
 cl_mem __cl_malloc__(cl_context context, size_t size, int line, const  char *file);
 
-/*
- * Memcpy
+/*! \brief Memcpy for opencl
+ *
+ *
+ *	\param[in] to The memory object to copy to
+ *	\param[in] from	The host data to copy from
+ *	\param[in] size How much to copy
+ *	\param[in] offset	Offset into the cl_mem object
+ *	\param[in] queue	A command queue
  */
 #define cl_copy_to(to, from, size, offset, queue) __cl_copy_to__(to, from, size, offset, queue, __LINE__, __FILE__)
+
+/*! \brief Memcpy for opencl
+ *
+ *	Should not be called directly, rather from the cl_copy_to() macro.
+ *
+ *	\param[in] to The memory object to copy to
+ *	\param[in] from	The host data to copy from
+ *	\param[in] size How much to copy
+ *	\param[in] offset	Offset into the cl_mem object
+ *	\param[in] queue	A command queue
+ *	\param[in] line The line the code invoked from
+ *	\param[in] file The file the code was invoked from
+ */
 void __cl_copy_to__(cl_mem to, void *from, size_t size, size_t offset, cl_command_queue command_queue, int line, const char *file);
 
+
+/*! \brief Memcpy for opencl
+ *
+ *
+ *	\param[in] from The memory object to copy from
+ *	\param[in] to	The host data to copy to
+ *	\param[in] size How much to copy
+ *	\param[in] offset	Offset into the cl_mem object
+ *	\param[in] queue	A command queue
+ */
 #define cl_copy_from(from, to, size, offset, queue) __cl_copy_from__(from, to, size, offset, queue, __LINE__, __FILE__)
+
+/*! \brief Memcpy for opencl
+ *
+ *	Should not be called directly, rather from the cl_copy_from() macro.
+ *
+ *	\param[in] from The memory object to copy from
+ *	\param[in] to	The host data to copy to
+ *	\param[in] size How much to copy
+ *	\param[in] offset	Offset into the cl_mem object
+ *	\param[in] queue	A command queue
+ *	\param[in] line The line the code invoked from
+ *	\param[in] file The file the code was invoked from
+ */
 void __cl_copy_from__(cl_mem from, void *to, size_t size, size_t offset, cl_command_queue command_queue, int line, const char *file);
 
-/*
- * Device info functions
+/*! \brief Info functions
+ *
+ *
+ *	\param[in] devid A device ID
+ *	\param[in] ifno The info to retrieve
+ *	\param[in] line The line the code invoked from
+ *	\param[in] file The file the code was invoked from
  */
 #define cl_get_info(devid, info) __cl_get_info__(devid, info, __LINE__, __FILE__)
+
+/*! \brief Info functions
+ *
+ *	Should not be called directly, rather from the cl_get_info() macro.
+ *
+ *	\param[in] devid A device ID
+ *	\param[in] ifno The info to retrieve
+ *	\param[in] line The line the code invoked from
+ *	\param[in] file The file the code was invoked from
+ */
 size_t __cl_get_info__(cl_device_id device_id, cl_device_info info, int line, const char *file);
+
+/*! \Brief gets the number of gpus on the system
+ *
+ *	\return the number of gpus
+ */
 uint32_t cl_get_num_gpus();
-/*
- * opencl function call macros
+
+/*! \brief Opencl function call macros
+ *
+ * Opencl function call macros
  * Upto 8 arguments currently. easily extended.
  * Dimsize and dimwgsize must be pointers.
  */

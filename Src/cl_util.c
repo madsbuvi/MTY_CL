@@ -167,7 +167,6 @@ uint32_t cl_get_num_gpus(){
 int init_cl_gpu_specific(int32_t gpu_id, cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue){
 	cl_uint ret_num_devices;
 	cl_uint ret_num_platforms;
-	int32_t gpu_devices = 0;
 	
 	/* Get platforms */
 	HandleErrorRet(clGetPlatformIDs(1, NULL, &ret_num_platforms));
@@ -221,7 +220,6 @@ void init_cl_gpu_single(cl_device_id *device_id, cl_context *context, cl_command
 
 	/* Create OpenCL context */
 	HandleErrorPar(*context = clCreateContext(NULL, 1, device_id, NULL, NULL, HANDLE_ERROR));
-	printu(*device_id);
 	/* Create Command Queue */
 	HandleErrorPar(*command_queue = clCreateCommandQueue(*context, *device_id, 0, HANDLE_ERROR));
 }
@@ -257,13 +255,13 @@ void cl_build(char **sources, int n_sources, cl_context context, cl_device_id de
 		lengths, HANDLE_ERROR));
 	
 	/* Build Kernel Program */
-	cl_int ret = clBuildProgram(*program, 1, &device_id, "-cl-opt-disable", NULL, NULL);
+	cl_int ret = clBuildProgram(*program, 1, &device_id, "", NULL, NULL);
 	if(ret){
 	    char buildString[100000];
 	    buildString[0]='\0';
         HandleErrorRet(clGetProgramBuildInfo(*program, device_id, CL_PROGRAM_BUILD_LOG, sizeof(char) * 100000, buildString, NULL));
         printf("build log:\n%s\n", buildString);
-		exit(-1);
+		pthread_exit((void *)oclErrorString(ret));
 	}
 	
 }
@@ -275,7 +273,7 @@ cl_mem __cl_malloc__(cl_context context, size_t size, int line, const  char *fil
 	memory_object = clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, &error);
 	if(error){
 		handle_error(error, line, file);
-		exit(-1);
+		return 0;
 	}
 	return memory_object;
 }
@@ -286,7 +284,7 @@ void __cl_copy_to__(cl_mem to, void *from, size_t size, size_t offset, cl_comman
     cl_int error = clEnqueueWriteBuffer(command_queue, to, CL_TRUE, offset, size, from, 0, NULL, NULL);
     if(error){
         handle_error(error, line, file);
-        exit(-1);
+		pthread_exit((void *)oclErrorString(error));
     }
 }
 
@@ -296,7 +294,7 @@ void __cl_copy_from__(cl_mem from, void *to, size_t size, size_t offset, cl_comm
     cl_int error = clEnqueueReadBuffer(command_queue, from, CL_TRUE, offset, size, to, 0, NULL, NULL);
     if(error){
         handle_error(error, line, file);
-        exit(-1);
+        pthread_exit((void *)oclErrorString(error));
     }
 }
 
@@ -305,7 +303,7 @@ cl_kernel __cl_create_kernel__(cl_program program, const char *kernelname, int l
 	cl_kernel result = clCreateKernel(program, kernelname, &error);
     if(error){
         handle_error(error, line, file);
-        exit(-1);
+        pthread_exit((void *)oclErrorString(error));
     }
 	return result;
 }
@@ -317,7 +315,7 @@ size_t __cl_get_info__(cl_device_id device_id, cl_device_info info, int line, co
 								&ret, NULL);
     if(error){
         handle_error(error, line, file);
-        exit(-1);
+        pthread_exit((void *)oclErrorString(error));
     }
 	return ret;
 }

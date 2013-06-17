@@ -390,7 +390,7 @@ thread_avail(void)
 static
 NORETURN
 thread_crypt64_new(void *a_param)
-{
+{	
 	struct THREAD_PARAM *param = a_param;
 	CODE_T *code = param->code;
 	CODE_T *cmp = code + param->code_cmp;
@@ -450,7 +450,14 @@ static struct status {
 
 void
 set_start_time(){
-	if(!status.startTime)status.startTime = status.lastTime = usec();
+	WaitForSingleObject(mutex_key, INFINITE);
+	if(!status.startTime){
+		status.startTime = status.lastTime = usec();
+		int i;
+		for (i = 0; i < n_cpus; i++) loop_cpu[i] = 0;
+	}
+	
+	ReleaseMutex(mutex_key);
 }
 
 
@@ -639,10 +646,9 @@ main(int argc, char *argv[])
   //I'll take the libery of assuming this application won't have to handle more than 1024 gpus
   pthread_t gpu_handler[1024]; 
   initialize_gpu_searcher(gpu_handler);
-
   //return; 
   //fprintf(stderr,"Debug variables. %d\n",(int)&debug_variables);
-  fprintf(stderr, "Starting search!\n");
+  //fprintf(stderr, "Starting search!\n");
   ReleaseMutex(mutex_key);
 
   mincnt = 0x7FFFFFFF;
