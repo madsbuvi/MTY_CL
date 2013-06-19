@@ -33,7 +33,7 @@ Supported architectures
 -----------------------
 Written primarily for GCN (Graphics Core Next), used in Souther Islands gpu's (AMD Radeon HD 77xx-79xx).
 It does work on the older VLIW architectures, (AMD/ATI Radeon HD pre-77xx), but fairly slowly (only about half the speed of MTY) last it was tested.
-version 0.40 is also achieving decent speeds for nvidia cards of the compute 3.5 architecture.
+version 0.40+ is also achieving decent speeds for nvidia cards of the compute 3.5 architecture.
 
 I've also made a GUI wrapped for Chapuni's version that runs on all VLIW architectures: [mtycal](https://github.com/downloads/madsbuvi/MTY_CL/mtycal.rar).
 The release of MTY that used VLIW AMD/ATI Architectures was unfortunately only released in closed source.
