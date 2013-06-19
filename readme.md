@@ -15,7 +15,7 @@ Usage
 1. Download the [latest release](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_032.rar).
 2. Start mty_gui.exe
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
-4. Click 'Start Search'.
+4. Click 'Start (NVIDIA)' or 'Start (AMD)'.
 5. A sample large target is provided which will search for most words longer than 8 characters in the english language, at once. Simply delete target.txt and rename sample_target_large.txt to target.txt to use it.
 6. Results will show up with proper japanese characters in the right hand column when you close the search. There is no need to manually handle encoding!
 7. If you want to send a tripcode password containing japanese characters to a friend, you can handle encoding by simply using a rich text format (e.g. paste it into a document in wordpad and send the .rtf).
@@ -65,6 +65,8 @@ Don't hesitate to contact me or open an issue if you have any problems with the 
 
 Changelog
 ---------
+0.41. - Fixed for amd cards and updated user interface with one button for amd, and one for nvidia.
+
 0.40. - Addd support for nVidia cards. Primarily the 7xx series, earlier series will likely not see great performance. The issue with duplicate keys has been resolved.
 
 0.32. - Fixed a crash
