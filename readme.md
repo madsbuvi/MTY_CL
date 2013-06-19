@@ -2,7 +2,9 @@ MTY CL
 ======
 !!NB!! program is broken for AMD drivers 13.x
 
+For AMD users to use this program you will need to revert to an earlier driver, such as 12.10.
 Note that when reverting to an older driver version you also have to manually delete a bunch of DLLs, since the installation program won't deal with them all automatically. The program "driver fusion" should help with this.
+
 
 A utility for generating custom tripcodes on various imageboards, utilising GPGPU Via OpenCL for faster generating.
 Based on Chapuni's [MTY](http://naniya.sourceforge.jp/), released under GPL.
@@ -20,9 +22,9 @@ Usage
 
 Releases
 --------
-Current version is 0.40:
-[Github](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_040.rar)
-[Mediafire](http://www.mediafire.com/download/1nw3uarcnnqzex4/mty_cl_040.rar)
+Current version is 0.41:
+[Github](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_041.rar)
+[Mediafire](http://www.mediafire.com/download/7fe6vpm6qr566aa/mty_cl_041.rar)
 
 Original Mtycal with ui:
 [Mediafire](http://www.mediafire.com/download.php?27p2lir4kedb721)
