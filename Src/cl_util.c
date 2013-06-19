@@ -6,9 +6,10 @@
  * Written by Mads Buvik Sandvei (https://github.com/madsbuvi/, madsbuvi@stud.ntnu.no)
  */
 
-#include "cl_util.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "cl_util.h"
+#include "mty_cl.h"
 
 int8_t *readFile(const char *filename, size_t *len)
 {
@@ -43,7 +44,7 @@ int8_t *readFile(const char *filename, size_t *len)
 	fread(buffer, fileLen, 1, file);
 	buffer[fileLen]='\0';
 	fclose(file);
-	return buffer;
+	return (int8_t *)buffer;
 }
 
 const char* oclErrorString(cl_int error)
@@ -198,7 +199,7 @@ int init_cl_gpu_specific(int32_t gpu_id, cl_device_id *device_id, cl_context *co
 	struct context_property cp = {CL_CONTEXT_PLATFORM, platform_ids[i], 0};
 	
 	/* Create OpenCL context */
-	HandleErrorPar(*context = clCreateContext(&cp, 1, device_id, NULL, NULL, HANDLE_ERROR));
+	HandleErrorPar(*context = clCreateContext((cl_context_properties *)&cp, 1, device_id, NULL, NULL, HANDLE_ERROR));
 
 	/* Create Command Queue */
 	HandleErrorPar(*command_queue = clCreateCommandQueue(*context, *device_id, 0, HANDLE_ERROR));
@@ -261,6 +262,7 @@ void cl_build(char **sources, int n_sources, cl_context context, cl_device_id de
 	    buildString[0]='\0';
         HandleErrorRet(clGetProgramBuildInfo(*program, device_id, CL_PROGRAM_BUILD_LOG, sizeof(char) * 100000, buildString, NULL));
         printf("build log:\n%s\n", buildString);
+		unregister_gpu();\
 		pthread_exit((void *)oclErrorString(ret));
 	}
 	
@@ -284,6 +286,7 @@ void __cl_copy_to__(cl_mem to, void *from, size_t size, size_t offset, cl_comman
     cl_int error = clEnqueueWriteBuffer(command_queue, to, CL_TRUE, offset, size, from, 0, NULL, NULL);
     if(error){
         handle_error(error, line, file);
+		unregister_gpu();\
 		pthread_exit((void *)oclErrorString(error));
     }
 }
@@ -294,6 +297,7 @@ void __cl_copy_from__(cl_mem from, void *to, size_t size, size_t offset, cl_comm
     cl_int error = clEnqueueReadBuffer(command_queue, from, CL_TRUE, offset, size, to, 0, NULL, NULL);
     if(error){
         handle_error(error, line, file);
+		unregister_gpu();\
         pthread_exit((void *)oclErrorString(error));
     }
 }
@@ -303,6 +307,7 @@ cl_kernel __cl_create_kernel__(cl_program program, const char *kernelname, int l
 	cl_kernel result = clCreateKernel(program, kernelname, &error);
     if(error){
         handle_error(error, line, file);
+		unregister_gpu();\
         pthread_exit((void *)oclErrorString(error));
     }
 	return result;
@@ -315,6 +320,7 @@ size_t __cl_get_info__(cl_device_id device_id, cl_device_info info, int line, co
 								&ret, NULL);
     if(error){
         handle_error(error, line, file);
+		unregister_gpu();\
         pthread_exit((void *)oclErrorString(error));
     }
 	return ret;

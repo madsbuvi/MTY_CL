@@ -49,6 +49,7 @@ struct CRYPT64_DESC const *const crypt64_descs[] =
 /* ‘¬“x•]‰¿—p */
 static int n_cpus;
 static int n_gpus = 0;
+static int dead_gpus = 0;
 static uint64_t loop_cpu[1024];
 static uint64_t loop_gpu[1024];
 
@@ -59,6 +60,14 @@ register_gpu(){
 	loop_gpu[n_gpus++] = 0;
 	ReleaseMutex(mutex_key);
 	return n;
+}
+
+void
+unregister_gpu(){
+	WaitForSingleObject(mutex_key, INFINITE);
+	dead_gpus++;
+	if(n_gpus == dead_gpus)set_start_time();
+	ReleaseMutex(mutex_key);
 }
 
 void
@@ -353,17 +362,18 @@ thread_avail(void)
 		 (unsigned)mask,
 		 (unsigned)mask_s);
 #endif
+	/* Couldn't translate this stuff, say nothing.
   if (popcnt64(mask_s) == 1)
-	/* Say nothing*/;
+	;
   else if (mask == mask_s)
 	fprintf(stderr,
 			"");
   else{
-	/* I couldn't translate at all, so say nothing */
-	/*fprintf(stderr,
+	fprintf(stderr,
 			"Å‚‘¬—Í‚Ì%g”{‚Ì—Í‚Å‚Ä‚«‚Æ‚¤‚É‚ª‚ñ‚Î‚é‚æB\n",
-			(double)popcnt64(mask) / popcnt64(mask_s));*/
-  }
+			(double)popcnt64(mask) / popcnt64(mask_s));
+			
+  }*/
   return mask;
 
 #elif defined(__linux__)	/* sched.h Šg’£ */
@@ -482,7 +492,6 @@ int
 main(int argc, char *argv[])
 {
   int i;
-  int mincnt;
   CODE_T *code = NULL;
   off_t code_cmp;
   FILE *sfp;	/* scoreboard */
@@ -490,7 +499,6 @@ main(int argc, char *argv[])
   uint64_t proc_mask;
   struct THREAD_PARAM *threads = NULL;
   int nthreads;
-  int tn;
   int cr;
 
   /* Key string */
@@ -499,7 +507,6 @@ main(int argc, char *argv[])
 #define UPDATE_INTERVAL 8	/* Interval between screen updates in seconds */
   status.startTime = status.lastTime = 0;
   uint64_t curTime;
-  uint32_t upd_int = 0;
 /*
  I couldn't really translate this:
  Average speed (kernels/s) * UPDATE_INTERVAL must not exceed UINT32_MAXB
@@ -554,7 +561,7 @@ main(int argc, char *argv[])
 
   /* Generate a comparison unit */
   fwrite(crypt64_descs[0]->cmp_pro, 1, crypt64_descs[0]->cmp_ep - crypt64_descs[0]->cmp_pro, sfp);	/* Preparation comparator */
-  tn = synth_synthesize(sfp,root_expr);
+  synth_synthesize(sfp,root_expr);
   fwrite(crypt64_descs[0]->cmp_ep, 1, crypt64_descs[0]->ep_end - crypt64_descs[0]->cmp_ep, sfp);	/* epilogue */
   /* put code into memory */
   code = scoreboard_map(sfp);
@@ -651,7 +658,6 @@ main(int argc, char *argv[])
   //fprintf(stderr, "Starting search!\n");
   ReleaseMutex(mutex_key);
 
-  mincnt = 0x7FFFFFFF;
 
   cr = 0;
   memset( &status, 0, sizeof( struct status ) );
@@ -661,7 +667,6 @@ main(int argc, char *argv[])
   for (;;)
 	{
 	  Sleep(5000);
-
 	  /* Measure speed */
 	  status.loop = 0;
 	  status.cpu = 0;

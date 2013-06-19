@@ -33,13 +33,15 @@ int cl_key_get_last(int key1, int key2);
 
 //Some ascii character causes certain tripcode implementation to fail
 //for no real reason other than them being a bad implementation.
-//This deals with this by replacing those characters with sjis characters
-//that the DES algorithm sees as the same.
-void cl_key_make_safe(uint32_t *key);
+//This deals with this issue by replacing those characters with sjis characters
+//that the DES algorithm sees as the same. Fortunately none of these have
+//any side effect on the salt
+void cl_key_make_safe(uint8_t *key);
 
 //Generates all the possible next 3 characters for the given key.
 //cl_key_char *key is a pointer to the shared key used in mty_cl.c
 uint32_t generate_all(cl_key_char *key, uint8_t **target);
+uint32_t generate_all_end(uint32_t **target);
 
 //PRNG
 inline uint64_t next_int(uint64_t x);

@@ -160,7 +160,7 @@ void examine(uint32_t hits, cl_key_char *keys, int item){
 	key[7] = hits/0x100;
 	key[8] = cl_key_get_last(key[6], key[7]);
 	cl_key_make_safe(key);
-	char *hash = crypt(key, salt);
+	char *hash = crypt((char *)key, salt);
 	assert(hash);
 	log_print(1, hash+3, key);
 	free(hash);
@@ -198,7 +198,6 @@ int do_search(int gpu){
 	cl_int ret;
 	uint8_t salt[2], *possible_keys, *used_keys;
 	uint32_t number_of_possible_keys;
-	uint8_t nvidia = 1;
 	int32_t a,b,c;
 	uint32_t work_group_size;
 	uint32_t n;
@@ -250,14 +249,12 @@ int do_search(int gpu){
 	lengths, HANDLE_ERROR));
 	
 	/* Build Kernel Program */
-	ret = clBuildProgram(program, 1, &device_id, "-cl-nv-verbose", NULL, NULL);
-	if(ret == 43){
-		nvidia = 0;
-		ret = clBuildProgram(program, 1, &device_id, "", NULL, NULL);
-	}
+	ret = clBuildProgram(program, 1, &device_id, "", NULL, NULL);
 	if(ret){
-		uint32_t ssiz = 5000000;
-	    char *buildString = malloc(ssiz);
+		fprintf(stderr, "Error code %d:\n", ret);
+		size_t ssiz = 0;
+        HandleErrorRet(clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &ssiz));
+	    char *buildString = malloc(ssiz+1);
 	    buildString[0]='\0';
         HandleErrorRet(clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, ssiz, buildString, NULL));
         printf("build log:\n%s\n", buildString);
@@ -290,28 +287,25 @@ int do_search(int gpu){
 	HandleErrorRet(clGetKernelWorkGroupInfo  ( kernel, device_id, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(kernel_pref_size), &kernel_pref_size, NULL));
 	HandleErrorRet(clGetKernelWorkGroupInfo  ( kernel, device_id, CL_KERNEL_PRIVATE_MEM_SIZE, sizeof(kernel_priv_size), &kernel_priv_size, NULL));
 
-	/* Prepare test launch */
-	if(nvidia){
-		work_group_size = max_kernel_group_size;
-		n = max_compute_units * work_group_size;
-	}
-	else{
-		//Shamelessly presume AMD
-		work_group_size = 64;
-		n = max_compute_units * work_group_size * 2 * 4;
-	}
-	
+	#if NVIDIA
+	work_group_size = max_kernel_group_size;
+	n = max_compute_units * work_group_size;
+	#else
+	work_group_size = 64;
+	n = max_compute_units * work_group_size * 2 * 4;
+	#endif
 	printu(max_compute_units);
 	printu(max_work_group_size);
-	printu(device_lmem_size);
+	printul(device_lmem_size);
 	printu(max_kernel_group_size);
-	printu(kernel_lmem_size);
+	printul(kernel_lmem_size);
 	printu(kernel_pref_size);
-	printu(kernel_priv_size);
+	printul(kernel_priv_size);
+	/* Prepare test launch */
 	
 	//host-side buffers for key related structures.
 	cl_key_char *keys;
-	uint32_t *keys_coalesced, *keys_sliced, *key_end_index,
+	uint32_t *keys_coalesced, *keys_sliced,
 		keys_size = n*56*sizeof(uint32_t),
 		key_end_index_size = sizeof(uint32_t),
 		key_end_index_offset = keys_size;
@@ -409,6 +403,7 @@ int do_search(int gpu){
 		cl_copy_to(keys_and_extra_gpu, keys_coalesced, keys_size + key_end_index_size, 0, command_queue);
 		
 		for(b = 0; b <= (num_end_keys/BATCH_SIZE); b++){
+			
 			int final_iteration = b == (num_end_keys/BATCH_SIZE);
 			for(c = 0; c <= (final_iteration ? (num_end_keys%BATCH_SIZE) : BATCH_SIZE); c++){
 				HandleErrorRet(clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL, &n, &work_group_size, 0, NULL, NULL));

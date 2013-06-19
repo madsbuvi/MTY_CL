@@ -59,6 +59,7 @@ void handle_error(cl_int error, int32_t line, const  char *file);
     cl_int error = (clfunc);\
     if(error){\
         handle_error(error, __LINE__, __FILE__);\
+		unregister_gpu();\
         pthread_exit((void *)oclErrorString(error));\
     }\
 }
@@ -77,6 +78,7 @@ void handle_error(cl_int error, int32_t line, const  char *file);
     (clfunc);\
     if(error){\
         handle_error(error, __LINE__, __FILE__);\
+		unregister_gpu();\
         pthread_exit((void *)oclErrorString(error));\
     }\
 }

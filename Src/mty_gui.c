@@ -3,6 +3,7 @@
 typedef struct{
 	GtkTextBuffer *tar_buffer;
 	GtkTextBuffer *log_buffer;
+	const char *executableName;
 }SearchArgs;
 
 void search(GtkWidget *btn, gpointer data){
@@ -26,7 +27,7 @@ void search(GtkWidget *btn, gpointer data){
 	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
 	ShExecInfo.hwnd = NULL;
 	ShExecInfo.lpVerb = "open";
-	ShExecInfo.lpFile = "mty_cl.exe";		
+	ShExecInfo.lpFile = args->executableName;		
 	ShExecInfo.lpParameters = "";	
 	ShExecInfo.lpDirectory = NULL;
 	ShExecInfo.nShow = SW_SHOW;
@@ -44,7 +45,7 @@ void search(GtkWidget *btn, gpointer data){
 int main( int argc, char *argv[]){
 	GtkWidget/*Windows*/ 	*window;
 	GtkWidget/*Containers*/ *pane;
-	GtkWidget/*Widgets*/	*start_btn;
+	GtkWidget/*Widgets*/	*start_btn_amd, *start_btn_nvidia;
 	GdkColor bg;
 	bg.red = 0x8000;
 	bg.green = 0x9000;
@@ -134,13 +135,23 @@ int main( int argc, char *argv[]){
 	
 	
 	/* SET UP START BUTTON */
-	start_btn = gtk_button_new_with_label("Start search");
-	gtk_widget_set_size_request(start_btn, 80, 35);
-	SearchArgs *start_btn_args = calloc(sizeof(SearchArgs),1);
-	start_btn_args->log_buffer = log_buffer;
-	start_btn_args->tar_buffer = tar_buffer;
-	g_signal_connect(start_btn, "clicked", G_CALLBACK(search), start_btn_args);
-	gtk_box_pack_start(GTK_BOX(tar_box), start_btn, FALSE, FALSE, 0);
+	start_btn_amd = gtk_button_new_with_label("Start (AMD)");
+	gtk_widget_set_size_request(start_btn_amd, 80, 35);
+	SearchArgs *start_btn_args_amd = calloc(sizeof(SearchArgs),1);
+	start_btn_args_amd->log_buffer = log_buffer;
+	start_btn_args_amd->tar_buffer = tar_buffer;
+	start_btn_args_amd->executableName = "mty_cl_amd.exe";
+	g_signal_connect(start_btn_amd, "clicked", G_CALLBACK(search), start_btn_args_amd);
+	gtk_box_pack_start(GTK_BOX(tar_box), start_btn_amd, FALSE, FALSE, 0);
+	
+	start_btn_nvidia = gtk_button_new_with_label("Start (NVIDIA)");
+	gtk_widget_set_size_request(start_btn_nvidia, 80, 35);
+	SearchArgs *start_btn_args_nvidia = calloc(sizeof(SearchArgs),1);
+	start_btn_args_nvidia->log_buffer = log_buffer;
+	start_btn_args_nvidia->tar_buffer = tar_buffer;
+	start_btn_args_nvidia->executableName = "mty_cl_nvidia.exe";
+	g_signal_connect(start_btn_nvidia, "clicked", G_CALLBACK(search), start_btn_args_nvidia);
+	gtk_box_pack_start(GTK_BOX(tar_box), start_btn_nvidia, FALSE, FALSE, 0);
 	
 	
 	/* SET UP PANE */

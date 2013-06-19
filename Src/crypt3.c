@@ -31,7 +31,7 @@
 *            This can easily be changed with only minor modifications to
 *            the function crypt().
 **************************************************************************/
-
+#include <stdlib.h>
 /* Initial permutation */
 static const char IP[] =
 {
@@ -381,8 +381,8 @@ char *crypt(char *pw, char *salt)
 {
     int i, j, temp;
     char c;
-	char *block = (char *)calloc(66,1);
-	char *iobuf = (char *)calloc(16,1);
+	char *block = calloc(66,1);
+	char *iobuf = calloc(16,1);
 
     for(i = 0; i < 66; i++)
         block[i] = 0;

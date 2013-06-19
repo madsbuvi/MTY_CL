@@ -171,7 +171,6 @@ wdict_add(int tn,
 		  int pos,
 		  struct DICT_CHAR const *word)
 {
-  int i;
   struct WDICT *pd;
   struct WDICT *rpd = NULL;
   int len		= word->len;
@@ -510,7 +509,6 @@ wdict_ishit(SLICE const *hit,	/* 生成比較器がセットしたヒット配列[tn] */
 void
 wdict_dump(int lv, struct WDICT const *dict)
 {
-  int i;
   int cls, pos, len;
   char const *t = &"\t\t\t\t\t\t\t\t\t\t"[10 - lv];
 

@@ -33,7 +33,7 @@ void cl_key_init(uint32_t seed){
 	base_count = 0;
 	
 	size_t size;
-	uint8_t *sjis_dat = readFile("sjis.dat", &size);
+	uint8_t *sjis_dat = (uint8_t *)readFile("sjis.dat", &size);
 	uint8_t *temp = sjis_dat;
 	
 	int i;
@@ -46,7 +46,7 @@ void cl_key_init(uint32_t seed){
 	
 	for(i = 0; i < 256; i++){
 		int j;
-		while(j = *sjis_dat++){
+		while((j = *sjis_dat++)){
 			existence[256*i+j] = 1;
 			chars[256*i+count[i]++] = j;
 		}
@@ -111,8 +111,8 @@ void cl_key_reset(cl_key_char *key, int n){
 }
 
 uint32_t generate_all(cl_key_char *key, uint8_t **target){
-	uint8_t *all_keys = (cl_key_char *)malloc(128*128*128*3*sizeof(uint8_t));
-	uint8_t *used_keys = (cl_key_char *)calloc(128*128*128,1);
+	uint8_t *all_keys = malloc(128*128*128*3*sizeof(uint8_t));
+	uint8_t *used_keys = calloc(128*128*128,1);
 	
 	*target = all_keys;
 	cl_key_reset(key, 3);
@@ -246,7 +246,7 @@ void strrepl(uint8_t *string, uint8_t target, uint8_t replacement, uint32_t len)
 	}
 }
 
-void cl_key_make_safe(uint32_t *key){
+void cl_key_make_safe(uint8_t *key){
 	char bad_ascii[] = "!\"#$%&()*+,-";
 	int i;
 	for(i = 0; i < strlen(bad_ascii); i++)strrepl(key, bad_ascii[i], bad_ascii[i]+0x80, 8);

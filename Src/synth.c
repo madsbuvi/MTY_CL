@@ -57,11 +57,11 @@ void cl_declare_regs(const char *base_name, int count){
 		len = sprintf(buffer, ", %s%d",base_name, i);
 		fwrite(buffer, 1, len, clfp);
 	}
-	len = sprintf(buffer, "; \\\n",base_name, i);
+	len = sprintf(buffer, "; \\\n");
 	fwrite(buffer, 1, len, clfp);
 }
 
-cl_save_work_area(){
+void cl_save_work_area(){
 	int i = 0;
 	char buffer[2048];
 	for(; i <= greatest_work_area_used; i++){
@@ -345,7 +345,7 @@ reg_mem_cl(unsigned op,
 	
 	ofs/=16;
 	
-	const char wa[128];
+	char wa[128];
 	if(ofs<work_area_size){
 		sprintf(wa, "work%d",ofs);
 	}else{
@@ -452,7 +452,6 @@ reg_mem(FILE *sfp,
   putc(0x0F, sfp);
   putc(op, sfp);
   disp_rm(sfp, d, i, ofs);
-  const char *opcode;
 
 }
 
@@ -1756,7 +1755,9 @@ synth_synthesize(FILE *sfp,
   assert(clfp!=NULL);
   int i;
   int r;
+#if DEBUG>=1
   off_t olr, ot;
+ #endif
 
   /* Expand the dictionary */
   if (node){
@@ -1803,7 +1804,11 @@ synth_synthesize(FILE *sfp,
 #endif
 
   /* LR Generate a sequence of instructions */
+  #if DEBUG>=1
   olr = ftell(sfp);
+  #else
+  ftell(sfp);
+  #endif
   if (node)
 	{
 	  fprintf(stderr, "Generating comparison code...");

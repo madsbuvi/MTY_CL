@@ -2090,7 +2090,7 @@ expr_parse(char const *filename)
 
   fclose(yyin);
   yyin = NULL;
-  printf(stderr, " done.\n");
+  fprintf(stderr, " done.\n");
   return g_node;
 }
 

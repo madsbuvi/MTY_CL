@@ -19,7 +19,7 @@ typedef signed char CODE_T;
 #define ALIGN_PREFIX(n)
 #define ALIGN_SUFFIX(n) __attribute__ ((aligned(n)))
 #ifdef __SSE__
-typedef unsigned DQWORD_T __attribute__ ((mode(V4SI)));
+typedef unsigned DQWORD_T __attribute__ ((vector_size (16)));
 #endif
 
 #else

@@ -10,6 +10,7 @@
 #define WDICT_H__
 
 #include "crypt64.h"
+#include "synth.h"
 
 struct WDICT;	/* vague */
 
