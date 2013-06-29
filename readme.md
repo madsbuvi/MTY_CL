@@ -53,8 +53,8 @@ Which gives (125000000)/((1761000000000*32)/(202000)) = 0.45 and (75000000)/((12
 
 For nVidia cards, obtaining high performance with registers limited to only 64 does not seem feasible. I have at least not been able to figure any scheme to
 obtain any speed better than what is currently obtained.
-In the 7xx series, however, the compute 3.5 architecture allows me to use 256 registers, allowing much better performance. Although the register usage is sufficiently high that not enough threads can be scheduled
-to obtain performance matching AMD cards for this purpose.
+In the 780 and Titan cards, however, the compute 3.5 architecture allows me to use 256 registers, allowing much better performance. Although the register usage is sufficiently high that not enough threads can be scheduled
+to obtain performance matching AMD cards for this purpose. gtx 770 and earlier cards however, will remain slow...
 
 Bugs
 ----
