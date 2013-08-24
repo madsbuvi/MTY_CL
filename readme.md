@@ -33,7 +33,7 @@ Supported architectures
 -----------------------
 Written primarily for GCN (Graphics Core Next), used in Souther Islands gpu's (AMD Radeon HD 77xx-79xx).
 It does work on the older VLIW architectures, (AMD/ATI Radeon HD pre-77xx), but fairly slowly (only about half the speed of MTY) last it was tested.
-version 0.40+ is also achieving decent speeds for nvidia cards of the compute 3.5 architecture.
+version 0.40+ is also achieving decent speeds for nvidia cards of the compute 3.5 architecture. But will be very slow for earlier nvidia cards.
 
 I've also made a GUI wrapped for Chapuni's version that runs on all VLIW architectures: [mtycal](https://github.com/downloads/madsbuvi/MTY_CL/mtycal.rar).
 The release of MTY that used VLIW AMD/ATI Architectures was unfortunately only released in closed source.
@@ -61,7 +61,19 @@ Bugs
 On AMD drivers 13.x the code appears completely broken. Visual artifacts, extremely poor performance and/or garbage output depending on which driver.
 Drivers before 13.1 should work. The issue has been reported to AMD...
 
+Sometimes the user interface will not display the contents of log.txt
+this is because the program has generated a password that gtk+ can't decode into shift_jis.
+open log.txt in notepad++ (google it) and change encoding to shift_jis and then remove any results that have
+passwords that look extremely strange (back them up if you wish, of course).
+
 Don't hesitate to contact me or open an issue if you have any problems with the program.
+
+
+Known Issues
+------
+Performance is slow on nvidia cards pre-780. This is because the architecture limitations make programming the DES algorithm very dificult.
+Being limited to 64 registers when i need at least ~130 to not have to spill to memory means the computations become bandwidth limited, which is an order of magnitude slower.
+This is the same reason why nvidia users will notice a general system slow-down when using the application, as the gpu hog becomes more noticeable when individual runs from this program takes much longer time.
 
 Changelog
 ---------
