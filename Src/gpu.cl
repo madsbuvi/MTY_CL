@@ -39,7 +39,7 @@ typedef long	int64_t;
  */
 #define BITS 8*sizeof(uint32_t)
 
-#define lsize 512
+#define lsize 128
 
 /*
  * From wdict.c
@@ -126,13 +126,12 @@ hash(unsigned m)
  * defines to save typing and make kernel code more readable
  */
 #define key(x) keys[(x)*size+index]
-#define lk(x)  lkeys[(x)*lsize]
 #define temps(x) temporaries[(x)*size+index]
-#define lb(x) lblock[(x)*lsize]
+#define lb(x) lblock[(x)*lsize + lindex]
 #define rb(x) rblock[(x)*lsize]
 #define work_area(x) lmem[(x)*lsize+lindex]
 #define gwork_area(x) gwa[(x)*size+index]
-#define gb(x)	b##x
+#define gb(x) b##x
 
 #define SWAP(a,b) \
 { \
@@ -140,18 +139,6 @@ hash(unsigned m)
 	a = b; \
 	b = swap; \
 }
-
-__constant int tr_sub[64] = {
-'.','/','0','1','2','3','4','5',
-'6','7','8','9','A','B','C','D',
-'E','F','G','H','I','J','K','L',
-'M','N','O','P','Q','R','S','T',
-'U','V','W','X','Y','Z','a','b',
-'c','d','e','f','g','h','i','j',
-'k','l','m','n','o','p','q','r',
-'s','t','u','v','w','x','y','z'
-};
-
 
 
 
@@ -176,7 +163,341 @@ void store_hit(
 	while(hits[index])index++;
 	hits[index] = (key2<<8)|key1;
 }
+#ifdef AMD
+#define lk(x)  lkeys[(x)*lsize]
+__kernel void crypt25(__global uint32_t *keys,	//First 6 characters of each key, first 3 not really used
+                      __global uint32_t *key_ends,//List of all possible last 2 characters of each key
+					  __global uint32_t *gwa,	//Global Work Area for Quine-McCluskey's method
+					  __global struct WDICT *g_dictpool,	//Dictionaries for the search
+					  __global struct WDK * wdk_pool,		//Wdk entries
+					  __global struct WDW * wdw_pool		//Words of all dictionaries
+											){	
+	
+    int index = get_global_id(0);
+    int lindex = get_local_id(0);
+    int size = get_global_size(0);
+	
+	/** ADDITIONAL PARAMETERS **/
+	//Calculate additional parameters.
+	//Performance would plunge if i had too many parameters... register spilling? That doesn't seem right...
 
+	/** Regular parameters **/
+	__global uint32_t *key_end_index;
+	
+	key_end_index = keys + 56*size;
+	
+	
+	/** Hit parameters **/
+	//These parameters are used only in the case of an actual hit. Don't care
+	//about performance in these cases so i don't care to make them nicely aligned to anything
+	
+	__global uint32_t *hit_bool;//saves the host from having to read the
+								//entire hits array when there are no hits.
+								
+	__global uint32_t *hits;//One for each work item (here is the large memory usage of this program!)
+	
+	hit_bool = key_end_index + 1;
+	hits = hit_bool + 1;
+	
+									
+	//Keep block (ciphertext) in registers while performing hash.
+	uint32_t b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, b34, b35, b36, b37, b38, b39, b40, b41, b42, b43, b44, b45, b46, b47, b48, b49, b50, b51, b52, b53, b54, b55, b56, b57, b58, b59, b60, b61, b62, b63;
+	
+	
+	
+	//Reserve ALL the shared memory for use by this block.
+	__local int lmem[0x2000];
+	
+	//Pointer to this thread's key slices.
+	__local uint32_t *lkeys = (__local uint32_t *)(lmem+lindex);
+	
+	//Copy host-determined key slice
+	for(int i = 0; i < 21; i++){
+		
+		lk(i) = key(i+21);
+	}
+	
+	//Set the last two characters
+	uint32_t key1, key2, key_index;
+	key_index = *key_end_index;
+	key1 = key_ends[key_index*2+0];
+	key2 = key_ends[key_index*2+1];
+	
+	lk(21) = -((key1>>0)&1);
+	lk(22) = -((key1>>1)&1);
+	lk(23) = -((key1>>2)&1);
+	lk(24) = -((key1>>3)&1);
+	lk(25) = -((key1>>4)&1);
+	lk(26) = -((key1>>5)&1);
+	lk(27) = -((key1>>6)&1);
+	lk(28) = -((key2>>0)&1);
+	lk(29) = -((key2>>1)&1);
+	lk(30) = -((key2>>2)&1);
+	lk(31) = -((key2>>3)&1);
+	lk(32) = -((key2>>4)&1);
+	lk(33) = -((key2>>5)&1);
+	lk(34) = -((key2>>6)&1);
+
+    //Zero the blocks
+	b0 = 0; b1 = 0; b2 = 0; b3 = 0; b4 = 0; b5 = 0; b6 = 0; b7 = 0; b8 = 0; b9 = 0; b10 = 0; b11 = 0; b12 = 0; b13 = 0; b14 = 0; b15 = 0; b16 = 0; b17 = 0; b18 = 0; b19 = 0; b20 = 0; b21 = 0; b22 = 0; b23 = 0; b24 = 0; b25 = 0; b26 = 0; b27 = 0; b28 = 0; b29 = 0; b30 = 0; b31 = 0; b32 = 0; b33 = 0; b34 = 0; b35 = 0; b36 = 0; b37 = 0; b38 = 0; b39 = 0; b40 = 0; b41 = 0; b42 = 0; b43 = 0; b44 = 0; b45 = 0; b46 = 0; b47 = 0; b48 = 0; b49 = 0; b50 = 0; b51 = 0; b52 = 0; b53 = 0; b54 = 0; b55 = 0; b56 = 0; b57 = 0; b58 = 0; b59 = 0; b60 = 0; b61 = 0; b62 = 0; b63 = 0;
+	//Perform the DES algorithm
+	uint32_t a1=0, a2=0, a3=0, a4=0, a5=0, a6=0;
+	barrier(CLK_LOCAL_MEM_FENCE);
+	int iterations = 25;
+	while(iterations--){
+		SWAP(b0,b32); SWAP(b1,b33); SWAP(b2,b34); SWAP(b3,b35); SWAP(b4,b36); SWAP(b5,b37); SWAP(b6,b38); SWAP(b7,b39); SWAP(b8,b40); SWAP(b9,b41); SWAP(b10,b42); SWAP(b11,b43); SWAP(b12,b44); SWAP(b13,b45); SWAP(b14,b46); SWAP(b15,b47); SWAP(b16,b48); SWAP(b17,b49); SWAP(b18,b50); SWAP(b19,b51); SWAP(b20,b52); SWAP(b21,b53); SWAP(b22,b54); SWAP(b23,b55); SWAP(b24,b56); SWAP(b25,b57); SWAP(b26,b58); SWAP(b27,b59); SWAP(b28,b60); SWAP(b29,b61); SWAP(b30,b62); SWAP(b31,b63);
+		
+		DES //des.cl
+	}
+	
+	barrier(CLK_LOCAL_MEM_FENCE);
+	uint32_t x0,x1,x2,x3,x4,x5,x6,x7;
+		
+	//Defines printed to cmp.cl by synth.c implement the logic gates generated by quine mclusky's method.
+	
+	COMPARISON
+	
+	ASSEMBLY
+	
+	gwork_area( 2 ) = work2;
+	gwork_area( 3 ) = work3;
+	gwork_area( 4 ) = work4;
+	gwork_area( 5 ) = work5;
+	gwork_area( 6 ) = work6;
+	gwork_area( 7 ) = work7;
+	gwork_area( 8 ) = work8;
+	gwork_area( 9 ) = work9;
+	gwork_area( 10 ) = work10;
+	gwork_area( 11 ) = work11;
+	gwork_area( 12 ) = work12;
+	gwork_area( 13 ) = work13;
+	gwork_area( 14 ) = work14;
+	gwork_area( 15 ) = work15;
+	gwork_area( 16 ) = work16;
+	gwork_area( 17 ) = work17;
+	gwork_area( 18 ) = work18;
+	gwork_area( 19 ) = work19;
+	gwork_area( 20 ) = work20;
+	
+	//Mask detailing potential hits
+	x0 = work0;
+	//Mask detailing actual hits that could be determined
+	x1 = work1;
+	
+	
+	//Perform FP and matrix transmutation into local memory.
+	//This trick lets us get all hashes into their own 64bit variable
+	//in only o(nhash * log(bits)) time, rather than the naive o(nhash * bits)
+	__local uint64_t *lblock = (__local uint64_t *)lmem;
+	
+	//Store a double word, buildt from two sources
+	#define SDW(src1,src2,dest)\
+	lb(dest) = b##src2;\
+	lb(dest) <<= 32;\
+	lb(dest) |= b##src1;
+	//Store a double word, buildt from only one source as
+	//the would-be second is either ignored or always 0.
+	#define SW(src,dest)\
+	lb(dest) = b##src;
+
+	//Perform FP and first step of matrix transmutation in one.
+	//But only do it if we could not prove that there won't be a hit.
+	if(x0){
+		{
+			SDW(14, 27, 0);
+			SDW(46, 59, 1);
+			SDW(6, 19, 2);
+			SDW(38, 51, 3);
+			SDW(31, 26, 4);
+			SDW(63, 58, 5);
+			SDW(5, 18, 6);
+			SDW(37, 50, 7);
+			SDW(30, 10, 8);
+			SDW(62, 42, 9);
+			SDW(22, 17, 10);
+			SDW(54, 49, 11);
+			SDW(29, 9, 12);
+			SDW(61, 41, 13);
+			SDW(21, 1, 14);
+			SDW(53, 33, 15);
+			SDW(13, 8, 16);
+			SDW(45, 40, 17);
+			SDW(20, 0, 18);
+			SDW(52, 32, 19);
+			SDW(12, 25, 20);
+			SDW(44, 57, 21);
+			SDW(11, 24, 24);
+			SDW(43, 56, 25);
+			SDW(3, 16, 26);
+			SDW(35, 48, 27);
+			SW(4, 22);
+			SW(36, 23);
+			SW(28, 28);
+			SW(60, 29);
+			SW(2, 30);
+			SW(34, 31);
+
+		}
+		
+		//Rest of the transmutation
+		uint64_t mask = 0xffffffffffffffff;
+		uint32_t IC = 16;
+		mask <<= 32;
+		while(IC>0){
+			uint64_t tmp = mask;
+			mask >>= IC;
+			mask ^= tmp;
+			__local uint64_t *rblock = &lb(IC);
+			uint32_t IK = 0;
+			while(IK<32){
+				uint64_t first = lb(IK);
+				uint64_t second = rb(IK);
+				uint64_t second_b = second;
+				second <<= IC;
+				second ^= first;
+				second &= mask;
+				first ^= second;
+				lb(IK) = first;
+				second >>= IC;
+				second ^= second_b;
+				rb(IK) = second;
+				
+				// Incrementing this way causes IK to skip a length of IC
+				// every time it reaches a multiple of IC.
+				IK+=IC;
+				IK++;
+				IK|=IC;
+				IK^=IC;
+			}
+			IC >>= 1;
+		}
+		//Move potential finds to appear sequentially from the start
+		//preventing the search loop from going serial
+		int potential_finds = 0;
+		//potential finds are stored in Local memory, but are also
+		//paired together with their old index which will be needed~
+
+		for(uint32_t i = 0; i < 8*sizeof(uint32_t); i++){
+			if(x0&((uint32_t)1<<i)){
+				if(x1&((uint32_t)1<<i)){
+					store_hit(lb(i), i, hits, hit_bool, key1, key2);
+				}
+				else {
+					//I also have to store the information about which slice it was found in somewhere
+					gwork_area(21+potential_finds) = i;
+					lb(potential_finds++)=lb(i);
+				}	
+			}
+		}
+		
+		//Search for hits in the dictionary.
+		for(potential_finds--;potential_finds>=0;potential_finds--){
+			uint64_t item = lb(potential_finds);
+			item &= 0x0fffffffffffffff;
+			
+			//Normalize
+			uint64_t norm = normalise(item);
+			
+			//start search
+			int hindex = gwork_area(21+potential_finds);
+			//Iterate over the valid dictionaries.
+			for(int p = MIN_DICTPOOL; p < N_DICTPOOL; p++){
+				__global struct WDICT *pd = &g_dictpool[p];
+				
+				int len = pd->len;
+				
+				//If there is a potential hit in this dictionary
+				if(len > 0 && (gwork_area(p) & ((uint32_t)1<<hindex))){
+					uint64_t m;
+					uint32_t k = ((norm >> 6 * ((pd->pos - 1) + len - HASH_NCHARS))
+								& ((1 << 6 * HASH_NCHARS) - 1));
+					uint32_t ia, ib;
+					uint32_t i, j;
+					
+					//Subtle hash function
+					i = hash(k);
+					//first check, is the hash in this dictionary?
+					if(!(pd->bmhash[i / 32] & (1u << (i & (31u)))))
+						continue;
+					//Perform binary search for the primary search key
+					int found_first = 0;
+					for(ia = 0, ib = pd->nwdk;
+							ib > 0;
+							ib >>= 1){
+						
+						uint32_t x,y;
+						i = ia + (ib >> 1);
+						x = k;
+						y = wdk_pool[i+pd->wdk].k;
+						if(x==y){
+							found_first++;
+							break;
+						}
+						else if(x>y){
+							ia = i + 1;
+							ib--;
+						}
+					}
+					if(!found_first)continue;
+					//found first, perform binary search for secondary key.
+					m = (norm >> 6 * (pd-> pos - 1)) & ((((uint64_t)1) << 6 * pd->len) - 1);
+					
+					ia = i?(wdk_pool[i-1+pd->wdk].i):(0);
+
+					for(ib = wdk_pool[i+pd->wdk].i - ia;
+							ib > 0;
+							ib >>= 1){
+						uint64_t x,y;
+						i = ia + (ib >> 1);
+						x = m;
+						y = normalise(wdw_pool[i+pd->words].w);
+						//printf("ib: %d, x: %I64u, y: %I64u\n",ib, x,y);
+						if(x == y){
+							//We found the secondary key!
+							//This is such a rare case that the remainder of the search
+							//is not optimized, and is sequential.
+							x = ((item >> 6 * (pd->pos - 1)) & ((((uint64_t)1) << 6 * pd->len) - 1));
+							//printf("Found secondary key.\nx: %I64u\nitem: %I64u\npos: %d\nlen: %d\n",x,item,pd->pos, pd->len);
+							for(j = i;
+									j < pd->nwords
+									 && normalise(wdw_pool[pd->words+j].w)==m;
+									j++)
+							{
+								uint64_t word = wdw_pool[pd->words+j].w;
+								uint64_t xi = xpize(x,wdw_pool[pd->words+j].xp,len);
+								if(xi == word){
+									store_hit(item, hindex, hits, hit_bool, key1, key2);
+								}
+							}
+							
+							for(j = i-1;
+									j >= 0 &&  j < pd->nwords
+									 && normalise(wdw_pool[pd->words+j].w)==m;
+									j--)
+							{
+								uint64_t word = wdw_pool[pd->words+j].w;
+								uint64_t xi = xpize(x,wdw_pool[pd->words+j].xp,len);
+								if(xi == word){
+									store_hit(item, hindex, hits, hit_bool, key1, key2);
+								}
+							}
+							break;
+						}
+						
+						if( x > y )
+						{
+							ia = i + 1;
+							ib--;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+#else
+#define lk(x)  kreg##x
 __kernel void crypt25(__global uint32_t *keys,	//First 6 characters of each key, first 3 not really used
                       __global uint32_t *key_ends,//List of all possible last 2 characters of each key
 					  __global uint32_t *gwa,	//Global Work Area for Quine-McCluskey's method
@@ -311,12 +632,13 @@ __kernel void crypt25(__global uint32_t *keys,	//First 6 characters of each key,
 	
 		TRANSPOSE
 		
+		
 		/*
 		 *	Place any hashes that pass through initial comparison sequentially first such that if multiple threads have some
 		 *	they will be processed in parallel.
 		 */
 		uint64_t hashes[] = {
-			hash0, hash1, hash2, hash3, hash4, hash5, hash6, hash7, hash8, hash9, hash10, hash11, hash12, hash13, hash14, hash15, hash16, hash17, hash18, hash19, hash20, hash21, hash22, hash23, hash24, hash25, hash26, hash27, hash28, hash29, hash30, hash31, hash32, hash33, hash34, hash35, hash36, hash37, hash38, hash39, hash40, hash41, hash42, hash43, hash44, hash45, hash46, hash47, hash48, hash49, hash50, hash51, hash52, hash53, hash54, hash55, hash56, hash57, hash58, hash59, hash60, hash61, hash62, hash63
+			hash0, hash1, hash2, hash3, hash4, hash5, hash6, hash7, hash8, hash9, hash10, hash11, hash12, hash13, hash14, hash15, hash16, hash17, hash18, hash19, hash20, hash21, hash22, hash23, hash24, hash25, hash26, hash27, hash28, hash29, hash30, hash31
 		};
 		uint64_t hashes_i[32];
 		uint32_t count = 0;
@@ -438,6 +760,7 @@ __kernel void crypt25(__global uint32_t *keys,	//First 6 characters of each key,
 		}
 	}
 }
+#endif
 
 //Used as a global synchronization point. If this was done in the crypt25 kernel there would be no way
 //to guarantee this wasn't done before one or more wavefronts ever wrote their own last keys. Although it seems unlikely.

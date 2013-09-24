@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -O3 -fomit-frame-pointer -Wall -mms-bitfields -Wno-unused-function
 DEFS = -DDEBUG=0
 BFLAGS = --debug
-CLFLAGS = -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.0\include" -L"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.0\lib\Win32"
+CLFLAGS = -I"C:\Program Files (x86)\AMD APP\include" -L"C:\Program Files (x86)\AMD APP\lib\x86"
 LFLAGS = -lpthread -lOpenCL
 LGTK = -LD:/usr/dev/lib -lgtk-win32-2.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0 -lgtksourceview-2.0 -lintl
 GTKFLAGS =  -I"D:\usr\dev\include\gtksourceview-2.0" -ID:/usr/dev/include/gtk-2.0 -ID:/usr/dev/lib/gtk-2.0/include -ID:/usr/dev/include/atk-1.0 -ID:/usr/dev/include/cairo -ID:/usr/dev/include/gdk-pixbuf-2.0 -ID:/usr/dev/include/pango-1.0 -ID:/usr/dev/include/glib-2.0 -ID:/usr/dev/lib/glib-2.0/include -ID:/usr/dev/include

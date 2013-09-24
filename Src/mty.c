@@ -401,6 +401,7 @@ static
 NORETURN
 thread_crypt64_new(void *a_param)
 {	
+	return;
 	struct THREAD_PARAM *param = a_param;
 	CODE_T *code = param->code;
 	CODE_T *cmp = code + param->code_cmp;
