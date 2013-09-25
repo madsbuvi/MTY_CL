@@ -2,26 +2,31 @@ CC = gcc
 CFLAGS = -O3 -fomit-frame-pointer -Wall -mms-bitfields -Wno-unused-function
 DEFS = -DDEBUG=0
 BFLAGS = --debug
-CLFLAGS = -I"C:\Program Files (x86)\AMD APP\include" -L"C:\Program Files (x86)\AMD APP\lib\x86"
 LFLAGS = -lpthread -lOpenCL
-LGTK = -LD:/usr/dev/lib -lgtk-win32-2.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0 -lgtksourceview-2.0 -lintl
-GTKFLAGS =  -I"D:\usr\dev\include\gtksourceview-2.0" -ID:/usr/dev/include/gtk-2.0 -ID:/usr/dev/lib/gtk-2.0/include -ID:/usr/dev/include/atk-1.0 -ID:/usr/dev/include/cairo -ID:/usr/dev/include/gdk-pixbuf-2.0 -ID:/usr/dev/include/pango-1.0 -ID:/usr/dev/include/glib-2.0 -ID:/usr/dev/lib/glib-2.0/include -ID:/usr/dev/include
 
-# SSE2 と MMX の選択 (どちらか片方だけを有効にする)
+
+##WINDOWS
+##Edit paths to match your own system. Running pgk-config in the gtk directory might help.
+#CLFLAGS = -I"C:\Program Files (x86)\AMD APP\include" -L"C:\Program Files (x86)\AMD APP\lib\x86"
+#LGTK = -LD:/usr/dev/lib -lgtk-win32-2.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0 -lgtksourceview-2.0 -lintl
+#GTKFLAGS =  -I"D:\usr\dev\include\gtksourceview-2.0" -ID:/usr/dev/include/gtk-2.0 -ID:/usr/dev/lib/gtk-2.0/include -ID:/usr/dev/include/atk-1.0 -ID:/usr/dev/include/cairo -ID:/usr/dev/include/gdk-pixbuf-2.0 -ID:/usr/dev/include/pango-1.0 -ID:/usr/dev/include/glib-2.0 -ID:/usr/dev/lib/glib-2.0/include -ID:/usr/dev/include
+#GUI_TARG = mty_gui.exe
+#TARG_AMD = mty_cl_amd.exe
+#TARG_NVI = mty_cl_nvidia.exe
+
+##LINUX
+GTKFLAGS =  `pkg-config --cflags gtk+-3.0` `pkg-config --cflags glib-2.0` `pkg-config --cflags gtksourceview-3.0` 
+LGTK = `pkg-config --libs gtk+-3.0` `pkg-config --libs glib-2.0` `pkg-config --libs gtksourceview-3.0`
+GUI_TARG = mty_gui
+TARG_AMD = mty_cl_amd
+TARG_NVI = mty_cl_nvidia
+
 DEFS += -msse2
-#DEFS += -DUSE_MMX
-
-# FreeBSD 6.1R だとこれが必要
-#DEFS += -DUSE_REGPARM
-
-# W32
 DEFS += -finput-charset=cp932 -fexec-charset=cp932
 
-GUI_TARG = mty_gui.exe
 GUI_OBJS = mty_gui.o util.o
-TARG_AMD = mty_cl_amd.exe
-TARG_NVI = mty_cl_nvidia.exe
 OBJS = mty.o crypt64.o cp932.o desconst.o dt4.o scoreboard.o synth.o translate.o expr_parse.o tr64_mmx.o wdict.o simplify.o key.o log.o hit.o mty_cl.o cl_util.o crypt3.o des_std.o key_cl.o
+
 
 all	: $(GUI_TARG)
 	make core
