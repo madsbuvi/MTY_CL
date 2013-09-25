@@ -9,23 +9,30 @@
  *
  */
 
-#include <assert.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <time.h>
-#include <sys/timeb.h>
-#include <pthread.h>
 
 #if defined(WIN32)
-
 #include <windows.h>
 #include <process.h>
 
 #elif defined(__GNUC__)
-
+#define _GNU_SOURCE
+#include <sched.h>
 #include <sys/time.h>
-
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+#else
+#error "Configuration not supported"
 #endif
+
+#include <assert.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/timeb.h>
+#include <pthread.h>
+#include <inttypes.h>
 
 #include "desconst.h"
 #include "expr_parse.h"
@@ -37,6 +44,16 @@
 #include "util.h"
 #include "mty_cl.h"
 
+#if defined(WIN32)
+
+#elif defined(_POSIX_SOURCE)
+#define HANDLE pthread_mutex_t
+#define WaitForSingleObject(mutex, trash) pthread_mutex_lock(&mutex)
+#define ReleaseMutex(mutex) pthread_mutex_unlock(&mutex);
+#else
+#error "Configuration not supported"
+
+#endif
 static HANDLE mutex_key;
 
 /* CRYPT64 ãLèqéq */
@@ -203,6 +220,24 @@ packet_create(int n,	/* Packet count */
 }
 
 /***************************************************************
+ * 
+ * Sleep
+ * 
+ */
+
+#if defined(WIN32)
+#define Sleep_ms(ms) Sleep(ms)
+
+#elif defined (__linux__)
+static void Sleep_ms(int ms) {
+	usleep(ms*1000);
+	return;
+}
+#else
+#error "Configuration not supported"
+#endif
+
+/***************************************************************
  *
  *	thread
  *
@@ -301,9 +336,8 @@ thread_create_p(pthread_t *th, NORETURN (*proc)(void *), void *param)
     So uninteresting. */
 
 #include <linux/unistd.h>
-_syscall0(pid_t,gettid)
 
-#define thread_get_tid() gettid()
+#define thread_get_tid() syscall(SYS_gettid)
 
 static
 int thread_set_affinity(pid_t tid, int i)
@@ -525,8 +559,16 @@ main(int argc, char *argv[])
 
   assert((1 << N_STRIDE) == N_ALU * ALU_BITS);
 
-  mutex_key = CreateMutex(NULL, FALSE, NULL);
+  
 
+#if defined(WIN32)
+	mutex_key = CreateMutex(NULL, FALSE, NULL);
+#elif defined(_POSIX_SOURCE)
+	pthread_mutex_init(&mutex_key, NULL);
+#else
+#error "Configuration not supported"
+
+#endif
   /* Read target.txt */
   root_expr = expr_parse("target.txt");
 
@@ -588,32 +630,6 @@ main(int argc, char *argv[])
 	  for (i = 0; i < 64; i++)
 		if (proc_mask & (1ULL << i))
 		  {
-			if (0&&ots < 0)
-			  {
-				/* Own scheduling
-					Gil apps Koyu system is to be set lower (Kamo) */
-#ifdef WIN32
-				h = GetCurrentProcess();
-				SetPriorityClass(h, BELOW_NORMAL_PRIORITY_CLASS);
-#endif
-#if defined(thread_set_priority)
-				/* I will fill the gap of heart (how gallant) */
-				threads[nthreads].ID = nthreads;
-				threads[nthreads].code = code;
-				threads[nthreads].code_cmp = code_cmp;
-				threads[nthreads].seed = rand();
-				threads[nthreads].pri = THREAD_PRIORITY_IDLE;
-				thread_create(h, thread_crypt64_new, &threads[nthreads]);
-				nthreads++;
-#endif
-				if (!code_cmp)
-				  break;
-
-				/* do the rest of the settings later (?) */
-				ots = i;
-			  }
-			else
-			  {
 				/* Another thread with slightly lower priority */
 				threads[nthreads].code = code;
 				threads[nthreads].code_cmp = code_cmp;
@@ -638,12 +654,14 @@ main(int argc, char *argv[])
 #endif
 				threads[nthreads].ID = nthreads;
 				thread_create(h, thread_crypt64_new, &threads[nthreads]);
+				/*
+				 * I don't think this is necessary
 #ifdef thread_get_tid
 				SetThreadAffinityMask(h, proc_mask);
 #endif
+* 				*/
 				nthreads++;
 #endif
-			  }
 		  }
 #ifdef thread_get_tid
 	  if (ots)
@@ -667,7 +685,7 @@ main(int argc, char *argv[])
   /* Search loop */
   for (;;)
 	{
-	  Sleep(5000);
+	  Sleep_ms(5000);
 	  /* Measure speed */
 	  status.loop = 0;
 	  status.cpu = 0;
@@ -696,7 +714,7 @@ main(int argc, char *argv[])
 	  
 
 	  fprintf(stderr,
-			  "%3d.%03dMtrips/s [%3d.%03dMtrips/s @ CPU,%4d.%03dMtrip/s @ GPU] %I64u.%03I64uB total\r",
+			  "%3d.%03dMtrips/s [%3d.%03dMtrips/s @ CPU,%4d.%03dMtrip/s @ GPU] %"PRIu64 ".%03" PRIu64 "B total\r",
 			  total / 1000, total % 1000,
 			  cpu / 1000, cpu % 1000,
 			  gpu / 1000, gpu % 1000,
