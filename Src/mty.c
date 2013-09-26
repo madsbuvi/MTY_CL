@@ -615,9 +615,11 @@ main(int argc, char *argv[])
   key_init(&key);
   ReleaseMutex(mutex_key);
   set_salt(code, crypt64_descs[0], key.key);
-
+#if defined(WIN32)
   if (log_open("log.txt") != 0) return 1;
-
+#else
+  if (log_open("./log.txt") != 0) return 1;
+#endif
   WaitForSingleObject(mutex_key, INFINITE);
 
   /* Production uncle working (>Google translate) */

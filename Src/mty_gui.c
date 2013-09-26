@@ -1,5 +1,11 @@
 #include "mty_gui.h"
+
+#ifdef _W32
 #include <windows.h>
+#else
+
+#endif
+
 typedef struct{
 	GtkTextBuffer *tar_buffer;
 	GtkTextBuffer *log_buffer;
@@ -21,7 +27,9 @@ void search(GtkWidget *btn, gpointer data){
 		fprintf(stderr, "Couldn't write target.txt, using old target.txt\n");
 		//TODO: Properly alert the user that target.txt couldn't be written.
 	}
-	
+#ifdef _W32
+	gchar name[1024];
+	g_snprintf(name, sizeof(name), "%s.exe", args->executableName);
 	SHELLEXECUTEINFO ShExecInfo = {0};
 	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
 	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -34,7 +42,12 @@ void search(GtkWidget *btn, gpointer data){
 	ShExecInfo.hInstApp = NULL;	
 	ShellExecuteEx(&ShExecInfo);
 	WaitForSingleObject(ShExecInfo.hProcess,INFINITE);
-	
+#else
+	gchar name[1024];
+	gchar *argv[2] = {name, NULL};
+	g_snprintf(name, sizeof(name), "./%s", name);
+	execv(name, argv);
+#endif
 	log = (gchar *)readFileFromEncodingToUTF8("log.txt", &log_len, "Shift-JIS");
 	gtk_text_buffer_set_text(log_buffer, log, -1);
 	
@@ -75,7 +88,9 @@ int main( int argc, char *argv[]){
 	gtk_window_set_default_size(GTK_WINDOW(window), 768, 480);
 	gtk_window_set_title(GTK_WINDOW(window), "MTY CL");
 	gtk_container_set_border_width(GTK_CONTAINER(window), 5);
+#ifdef _W32
 	GTK_WINDOW(window)->allow_shrink = TRUE;
+#endif
     gtk_widget_modify_bg(window, GTK_STATE_NORMAL, &bg);
 	g_signal_connect_swapped(G_OBJECT(window), "destroy",
 		G_CALLBACK(gtk_main_quit), G_OBJECT(window));
@@ -140,7 +155,7 @@ int main( int argc, char *argv[]){
 	SearchArgs *start_btn_args_amd = calloc(sizeof(SearchArgs),1);
 	start_btn_args_amd->log_buffer = log_buffer;
 	start_btn_args_amd->tar_buffer = tar_buffer;
-	start_btn_args_amd->executableName = "mty_cl_amd.exe";
+	start_btn_args_amd->executableName = "mty_cl_amd";
 	g_signal_connect(start_btn_amd, "clicked", G_CALLBACK(search), start_btn_args_amd);
 	gtk_box_pack_start(GTK_BOX(tar_box), start_btn_amd, FALSE, FALSE, 0);
 	
@@ -149,7 +164,7 @@ int main( int argc, char *argv[]){
 	SearchArgs *start_btn_args_nvidia = calloc(sizeof(SearchArgs),1);
 	start_btn_args_nvidia->log_buffer = log_buffer;
 	start_btn_args_nvidia->tar_buffer = tar_buffer;
-	start_btn_args_nvidia->executableName = "mty_cl_nvidia.exe";
+	start_btn_args_nvidia->executableName = "mty_cl_nvidia";
 	g_signal_connect(start_btn_nvidia, "clicked", G_CALLBACK(search), start_btn_args_nvidia);
 	gtk_box_pack_start(GTK_BOX(tar_box), start_btn_nvidia, FALSE, FALSE, 0);
 	

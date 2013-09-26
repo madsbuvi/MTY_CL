@@ -18,8 +18,17 @@
 #include "desconst.h"
 #include "mty_cl.h"
 #include "cl_util.h"
-#include "DES_std.h"
-#include "windows.h"
+#include "des_std.h"
+
+#if defined(WIN32)
+
+#include <windows.h>
+
+#elif defined(__GNUC__)
+
+#include <sys/time.h>
+#endif
+
 #include "wdict.h"
 #include "log.h"
 #include "crypt3.h"
@@ -199,8 +208,8 @@ int do_search(int gpu){
 	uint8_t salt[2], *possible_keys, *used_keys;
 	uint32_t number_of_possible_keys;
 	int32_t a,b,c;
-	uint32_t work_group_size;
-	uint32_t n;
+	size_t work_group_size;
+	size_t n;
 	
 	//Will contain a list of defines to pass to the opencl compiler
 	//Instead of having another level of indirection with the extension matrix, i'll just
@@ -304,12 +313,12 @@ int do_search(int gpu){
 	
 	/* Gather information about host and device */
 	uint32_t max_compute_units = 0;
-	uint32_t max_work_group_size = 0;
+	size_t max_work_group_size = 0;
 	uint64_t device_lmem_size = 0;
 	
-	uint32_t max_kernel_group_size = 0;
+	size_t max_kernel_group_size = 0;
 	uint64_t kernel_lmem_size = 0;
-	uint32_t kernel_pref_size = 0;
+	size_t kernel_pref_size = 0;
 	uint64_t kernel_priv_size = 0;
 	size_t *program_size = 0;
 	

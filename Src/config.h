@@ -72,7 +72,7 @@ typedef int8_t		SALTOFS_T;
 
 #define N_STRIDE 7
 typedef DQWORD_T	WS_T;
-typedef uint64_t	ALU_T;
+typedef uint32_t	ALU_T;
 typedef int32_t		SALTOFS_T;
 
 #define REQUIRED_CAPS	(CPUID_CMOV | CPUID_SSE | CPUID_SSE2)

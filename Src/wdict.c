@@ -560,7 +560,6 @@ extern void wdict_setup_gpu(void **dictpool, void **wdk_pool, void **wdw_pool,
 							int32_t *ret_min_dictpool, int32_t *ret_n_dictpool){
 	*ret_min_dictpool = min_dictpool;
 	*ret_n_dictpool = n_dictpool;
-	
 	*dictpoolsize = sizeof(struct WDICT_cl)*n_dictpool;
 	struct WDICT_cl *cldicts = (struct WDICT_cl*)calloc(*dictpoolsize,1);
 	*dictpool = cldicts;

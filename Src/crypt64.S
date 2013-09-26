@@ -375,14 +375,6 @@ crypt64_cmp_pro:
 	lea	W*(32+16)(PARAM),RL
 	lea	W*(64+16)(PARAM),T
 	
-	push %eax
-	movl $debug_variables, %eax
-	movl %ecx, (%eax)
-	movl %ebp, 4(%eax)
-	movl %edi, 8(%eax)
-	movl %esi, 12(%eax)
-	pop %eax
-	
 // The comparator is generated here
 
 crypt64_cmp_ep:

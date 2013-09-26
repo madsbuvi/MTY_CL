@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <gtk/gtk.h>
 #include <gtksourceview/gtksourceview.h>
+#include <glib.h>
 
 #define gtk_update while(gtk_events_pending()) gtk_main_iteration();
 

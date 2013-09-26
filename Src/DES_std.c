@@ -2,7 +2,7 @@
  * Some DES constants. Copied from DES_std.c of John the Ripper password cracker,
  * Copyright (c) 1996-2001,2005 by Solar Designer
  */
-#include "DES_std.h"
+#include "des_std.h"
 
 unsigned char DES_E[48] = {
 	31, 0, 1, 2, 3, 4,
