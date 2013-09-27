@@ -82,7 +82,7 @@
 #define USE_T	1
 
 .if !USE_T	// to suppress code generated
-//#include "x64-sse.S"
+#include "x86-64.S"
 .endif
 #undef K
 
@@ -286,7 +286,10 @@ clr_lr:
 
 .align	64
 loo:
-	add	W*2*56(K),K
+	push 	%rax
+	movslq	W*2*56(K),%rax
+	add		%rax,%rcx
+	pop		%rax
 
 #ifdef S1
 
