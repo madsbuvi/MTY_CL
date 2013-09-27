@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -fomit-frame-pointer -Wall -mms-bitfields -Wno-unused-function -DUSE_64_XMM
+CFLAGS = -O3 -Wall -mms-bitfields -Wno-unused-function -DUSE_64_XMM 
 DEFS = -DDEBUG=0
 BFLAGS = --debug
 LFLAGS = -lpthread -lOpenCL
