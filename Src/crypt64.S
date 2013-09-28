@@ -286,10 +286,14 @@ clr_lr:
 
 .align	64
 loo:
+#ifdef USE_64_XMM
 	push 	%rax
 	movslq	W*2*56(K),%rax
 	add		%rax,%rcx
 	pop		%rax
+#else
+	add  W*2*56(K),K 
+#endif
 
 #ifdef S1
 
