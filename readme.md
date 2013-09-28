@@ -23,7 +23,7 @@ Usage
 
 Releases
 --------
-Current version is 0.41:
+Current version is 0.42:
 Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_042.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_042_linux.rar)
 Mediafire:[Windows](http://www.mediafire.com/download/0ri5gk2jhj987gu/mty_cl_042.rar) [Linux](http://www.mediafire.com/download/knc3we7c1jz1pwk/mty_cl_042_linux.rar)
 
@@ -73,6 +73,8 @@ This is the same reason why nvidia users will notice a general system slow-down 
 
 Changelog
 ---------
+0.42. - Workaround for the AMD diver issue. Linux binaries also released.
+
 0.41. - Fixed for amd cards and updated user interface with one button for amd, and one for nvidia.
 
 0.40. - Addd support for nVidia cards. Primarily the 7xx series, earlier series will likely not see great performance. The issue with duplicate keys has been resolved.
