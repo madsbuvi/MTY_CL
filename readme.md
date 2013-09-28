@@ -7,7 +7,7 @@ This project is also released under GPL.
 NB
 --
 Version 0.42 resolves the issues with AMD drivers if you use the latest driver (13.9)
-This version runs slightly slower than earlier versions, so for faster searching revert to earlier drivers (such as 12.10) and use version 0.41.
+This version runs slightly slower (for AMD users) than earlier versions, so for faster searching revert to earlier drivers (such as 12.10) and use version 0.41.
 Consult google on how to properly roll back AMD drivers, as AMD's uninstall does not do this properly.
 
 
