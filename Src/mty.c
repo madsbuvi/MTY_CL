@@ -691,7 +691,7 @@ main(int argc, char *argv[])
 				threads[nthreads].ID = nthreads;
 				thread_create(h, thread_crypt64_new, &threads[nthreads]);
 #ifdef thread_get_tid
-				thread_set_affinity(h, i);
+				//thread_set_affinity(h, i);
 #endif
 				nthreads++;
 #if 1
@@ -704,18 +704,17 @@ main(int argc, char *argv[])
 #endif
 				threads[nthreads].ID = nthreads;
 				thread_create(h, thread_crypt64_new, &threads[nthreads]);
-				/*
-				 * I don't think this is necessary
+		
 #ifdef thread_get_tid
-				SetThreadAffinityMask(h, proc_mask);
+				//SetThreadAffinityMask(h, proc_mask);
 #endif
-* 				*/
+ 				
 				nthreads++;
 #endif
 		  }
 #ifdef thread_get_tid
-	  if (ots)
-		thread_set_affinity(thread_get_tid(), ots);
+	  //if (ots)
+		//thread_set_affinity(thread_get_tid(), ots);
 #endif
 	}
 	
