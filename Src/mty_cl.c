@@ -284,7 +284,8 @@ int do_search(int gpu){
 		len_cmp,
 		len_crypt
 		};
-
+	
+	fprintf(stderr, "Compiling... ");
 	HandleErrorPar(program = clCreateProgramWithSource(context, sizeof(lengths)/sizeof(const size_t), sources,
 	lengths, HANDLE_ERROR));
 	
@@ -304,6 +305,7 @@ int do_search(int gpu){
         printf("build log:\n%s\n", buildString);
 		free(buildString);
 	}
+	fprintf(stderr, "Done.\n");
 
 	/* Create OpenCL Kernel */
 	
@@ -400,11 +402,13 @@ int do_search(int gpu){
 
     /* Execute */
 	int length = number_of_possible_keys / (n*32);
+	uint32_t prng_state = usec();
+	uint32_t selector = prng_state = next_int(prng_state);
+	selector %= number_of_possible_keys;
 	
 	set_start_time();
 	keys = calloc(8*32*n, sizeof(cl_key_char));
 	keys_sliced = calloc(8*32*n, sizeof(uint32_t));
-	uint32_t prng_state = usec();
 				HandleErrorRet(clEnqueueNDRangeKernel(command_queue, clear_kernel, 1, NULL, &n, &work_group_size, 0, NULL, NULL));
     for(a=0; a<length; a++){
 		//Reset keys
@@ -413,23 +417,15 @@ int do_search(int gpu){
 		
 		//Select a shift-jis key
 		for(b=0; b<n*32; b++){
+			int i = selector % number_of_possible_keys;
 			keys[b*8+0] = shared_key[0];
 			keys[b*8+1] = shared_key[1];
 			keys[b*8+2] = shared_key[2];
+			keys[b*8+3].key = possible_keys[3*i+0];
+			keys[b*8+4].key = possible_keys[3*i+1];
+			keys[b*8+5].key = possible_keys[3*i+2];
 			
-			
-			uint32_t selector = prng_state = next_int(prng_state);
-			selector %= number_of_possible_keys;
-			while(used_keys[selector]){
-				selector = prng_state = next_int(prng_state);
-				selector %= number_of_possible_keys;
-			}
-			
-			keys[b*8+3].key = possible_keys[3*selector+0];
-			keys[b*8+4].key = possible_keys[3*selector+1];
-			keys[b*8+5].key = possible_keys[3*selector+2];
-			
-			used_keys[selector] = 1;
+			selector++;
 			
 			uint8_t key[8];
 			for(c = 0; c < 6; c++)key[c] = keys[b*8+c].key;
@@ -527,6 +523,19 @@ int gpu_init(uint32_t seed){
 
 void *gpu_main(void *dummyarg /* Takes no argument */){
 	int gpu = register_gpu();
+    pthread_t thId = pthread_self();
+    pthread_attr_t thAttr;
+    int policy = 0;
+    int max_prio_for_policy = 0;
+    int ret = 0;
+
+    ret = pthread_attr_init(&thAttr);if(ret){fprintf(stderr, "Could not init\n");}
+    ret = pthread_attr_getschedpolicy(&thAttr, &policy);if(ret){fprintf(stderr, "Could not get\n");}
+    max_prio_for_policy = sched_get_priority_max(policy);
+
+
+    ret = pthread_setschedprio(thId, max_prio_for_policy);if(ret){fprintf(stderr, "Could not set\n");}
+    ret = pthread_attr_destroy(&thAttr);if(ret){fprintf(stderr, "Could not destroy\n");}
     while(1){
 		do_search(gpu);
 	}

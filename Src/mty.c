@@ -318,6 +318,8 @@ typedef int THREAD_TIMEOUT_T;
 #define THREAD_PRIORITY_IDLE	16
 
 typedef pthread_t THREAD_TH_T;
+struct sched_param param;
+pthread_attr_t tattr;
 
 #define thread_sleep(n) (usleep(1000 * (n)) != EINVAL || sleep((n) / 1000))
 #define thread_create(th, proc, arg) thread_create_p(&(th), proc, arg)
@@ -326,7 +328,7 @@ static
 void
 thread_create_p(pthread_t *th, NORETURN (*proc)(void *), void *param)
 {
-  pthread_create(th, NULL, (void *(*)(void *))proc, param);
+  pthread_create(th, &tattr, (void *(*)(void *))proc, param);
 }
 
 #if defined(__linux__)
@@ -435,7 +437,7 @@ static
 NORETURN
 thread_crypt64_new(void *a_param)
 {	
-	
+
 	struct THREAD_PARAM *param = a_param;
 	//if(param->ID) return;
 	CODE_T *code = param->code;
@@ -511,9 +513,20 @@ static void
 initialize_gpu_searcher(pthread_t *gpu_handler){
 	int num_devices = gpu_init(usec());
 	fprintf(stderr,"Number of GPUs detected: %d\n",num_devices);
-	int i = 0;
+	int i = 0, error;
+	/*
+	if(error = pthread_attr_getschedparam(&tattr,&param))
+	{
+		fprintf(stderr,"Getting scheduling parameters failed with error %s\n",strerror(error));
+	}
+	param.sched_priority=1;
+	if(error = pthread_attr_setschedparam(&tattr,&param))
+	{
+		fprintf(stderr,"Setting scheduling parameters failed with error %s\n",strerror(error));
+	}*/
+	
 	for(;i<num_devices; i++){
-		pthread_create( &gpu_handler[i], NULL, gpu_main, NULL);
+		pthread_create( &gpu_handler[i], &tattr, gpu_main, NULL);
 	}
 	//pthread_join(*gpu_handler, NULL);
 }
@@ -563,9 +576,43 @@ main(int argc, char *argv[])
   
 
 #if defined(WIN32)
+
 	mutex_key = CreateMutex(NULL, FALSE, NULL);
+	
 #elif defined(_POSIX_SOURCE)
-	pthread_mutex_init(&mutex_key, NULL);
+
+	int error;
+	if(error=pthread_mutex_init(&mutex_key, NULL))
+	{
+		fprintf(stderr,"Mutex initialization failed with error %s\n",strerror(error));
+	}
+
+	if(error=pthread_attr_init(&tattr))
+	{
+		fprintf(stderr,"Attribute initialization failed with error %s\n",strerror(error));
+	}
+	/*
+	if(error = pthread_attr_setinheritsched(&tattr,PTHREAD_EXPLICIT_SCHED))
+	{
+		fprintf(stderr,"Setting scheduling parameters failed with error %s\n",strerror(error));
+	}*/
+	
+	if(error = pthread_attr_setschedpolicy(&tattr, SCHED_RR))
+	{
+		fprintf(stderr,"Setting scheduling policy failed with error %s\n",strerror(error));
+	}
+	
+	if(error = pthread_attr_getschedparam(&tattr,&param))
+	{
+		fprintf(stderr,"Getting scheduling parameters failed with error %s\n",strerror(error));
+	}
+	param.sched_priority=0;
+	if(error = pthread_attr_setschedparam(&tattr,&param))
+	{
+		fprintf(stderr,"Setting scheduling parameters failed with error %s\n",strerror(error));
+	}
+	
+	
 #else
 #error "Configuration not supported"
 
