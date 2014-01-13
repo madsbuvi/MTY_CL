@@ -64,6 +64,7 @@ On linux the GUI will not properly launch the amd/nvidia searchers, start them f
 
 For some users the program will crash instantly. All known cases are Ivy Bridge on Windows 8. Try running the [Debug Build](http://www.mediafire.com/download/i9fibp97ps6amll/mty_cl_042_-g.rar).
 If that also crashes, run the debug build through [gdb](http://www.equation.com/servlet/equation.cmd?fa=gdb) (see [issue 7](https://github.com/madsbuvi/MTY_CL/issues/7) for instructions) and give me the output (respond to issue 7 or make a new issue).
+This issue SHOULD be fixed in version .43
 
 Don't hesitate to contact me or open an issue if you have any problems with the program.
 
@@ -76,7 +77,7 @@ This is the same reason why nvidia users will notice a general system slow-down 
 
 Changelog
 ---------
-0.43. - Fixed a problem where mty_cl would exit if it found a platform with no devices, instead of ignoring these platforms like it should.
+0.43. - Fixed a problem where mty_cl would exit if it found a platform with no devices, instead of ignoring these platforms like it should. Should also fix the problem where the latest intel chips would crash instantly.
 
 0.42. - Workaround for the AMD diver issue. Linux binaries also released.
 
