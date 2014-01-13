@@ -13,7 +13,7 @@ Consult google on how to properly roll back AMD drivers, as AMD's uninstall does
 
 Usage
 -----
-1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_042.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_042_linux.rar)
+1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
 2. Start mty_gui.exe
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
 4. Click 'Start (NVIDIA)' or 'Start (AMD)' (linux users should start the relevant executable from the command line)
@@ -23,9 +23,9 @@ Usage
 
 Releases
 --------
-Current version is 0.42:
-Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_042.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_042_linux.rar)
-Mediafire:[Windows](http://www.mediafire.com/download/0ri5gk2jhj987gu/mty_cl_042.rar) [Linux](http://www.mediafire.com/download/knc3we7c1jz1pwk/mty_cl_042_linux.rar)
+Current version is 0.43:
+Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
+Mediafire:[Windows](http://www.mediafire.com/download/66yf8a8yd1xdk1f/mty_cl_043.rar) [Linux](http://www.mediafire.com/download/gf1r5hfw3tk3fdi/mty_cl_043.tar.gz)
 
 Previous version 0.41:
 [Github](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_041.rar)
@@ -76,6 +76,8 @@ This is the same reason why nvidia users will notice a general system slow-down 
 
 Changelog
 ---------
+0.43. - Fixed a problem where mty_cl would exit if it found a platform with no devices, instead of ignoring these platforms like it should.
+
 0.42. - Workaround for the AMD diver issue. Linux binaries also released.
 
 0.41. - Fixed for amd cards and updated user interface with one button for amd, and one for nvidia.
