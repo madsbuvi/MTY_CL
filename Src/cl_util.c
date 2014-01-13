@@ -159,7 +159,7 @@ uint32_t cl_get_num_gpus(){
 	/* Count number of GPU devices in each platform */
 	int i = 0;
 	for(; i < ret_num_platforms; i++){
-		HandleErrorRet(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &ret_num_devices));
+		HandleErrorRet_ignore(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &ret_num_devices));
 		gpu_devices += ret_num_devices;
 	}
 	return gpu_devices;
@@ -177,7 +177,7 @@ int init_cl_gpu_specific(int32_t gpu_id, cl_device_id *device_id, cl_context *co
 	/* Find the platform for the given device */
 	int i = 0;
 	for(; i < ret_num_platforms; i++){
-		HandleErrorRet(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &ret_num_devices));
+		HandleErrorRet_ignore(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &ret_num_devices));
 		gpu_id -= ret_num_devices;
 		if(gpu_id < 0){
 			gpu_id += ret_num_devices;break;

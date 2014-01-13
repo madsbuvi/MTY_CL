@@ -64,6 +64,23 @@ void handle_error(cl_int error, int32_t line, const  char *file);
     }\
 }
 
+//Defines to handle errors:
+//You do not need to use semicolons after these defines, but it's a good habit.
+
+/*!	\brief Define to wrap around a function that returns error code but does NOT quit
+ *  Define to wrap around a function that returns error code
+ *  E.g. HandleErrorRet(clGetPlatformIDs(1, &platform_id, &ret_num_platforms));
+ *	Call handle_error on a returned error code and then continues executing.
+ */
+#define HandleErrorRet_ignore(clfunc)\
+{\
+    cl_int error = (clfunc);\
+    if(error){\
+        handle_error(error, __LINE__, __FILE__);\
+		unregister_gpu();\
+    }\
+}
+
 //! \brief Alias of the error parameter for HandleErrorPar
 #define HANDLE_ERROR &error
 /*!	\brief Define to wrap around a function that returns error code to a parameter

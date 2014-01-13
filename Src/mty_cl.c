@@ -523,19 +523,18 @@ int gpu_init(uint32_t seed){
 
 void *gpu_main(void *dummyarg /* Takes no argument */){
 	int gpu = register_gpu();
+#if defined(_POSIX_SOURCE)
     pthread_t thId = pthread_self();
     pthread_attr_t thAttr;
     int policy = 0;
     int max_prio_for_policy = 0;
     int ret = 0;
-
     ret = pthread_attr_init(&thAttr);if(ret){fprintf(stderr, "Could not init\n");}
     ret = pthread_attr_getschedpolicy(&thAttr, &policy);if(ret){fprintf(stderr, "Could not get\n");}
     max_prio_for_policy = sched_get_priority_max(policy);
-
-
     ret = pthread_setschedprio(thId, max_prio_for_policy);if(ret){fprintf(stderr, "Could not set\n");}
     ret = pthread_attr_destroy(&thAttr);if(ret){fprintf(stderr, "Could not destroy\n");}
+#endif
     while(1){
 		do_search(gpu);
 	}

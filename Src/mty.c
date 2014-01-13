@@ -526,7 +526,13 @@ initialize_gpu_searcher(pthread_t *gpu_handler){
 	}*/
 	
 	for(;i<num_devices; i++){
-		pthread_create( &gpu_handler[i], &tattr, gpu_main, NULL);
+		pthread_create( &gpu_handler[i], 
+#if defined(_POSIX_SOURCE)
+		&tattr
+#else
+		NULL
+#endif
+		, gpu_main, NULL);
 	}
 	//pthread_join(*gpu_handler, NULL);
 }
