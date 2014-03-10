@@ -55,6 +55,8 @@ Older nvidias MAY CRASH due to slow execution, if that happens it's best to use 
 
 Bugs
 ----
+For newer cards the gpu memory requirements exceeds the default maximum allowed allocation, and the program crashes with "CL_INVALID_BUFFER_SIZE". To get around this run the command "setx GPU_MAX_ALLOC_PERCENT 100" from the command line. The settings should stick, but if it does not create a .bat file that runs the command then the appropriate executable.
+
 Sometimes the user interface will not display the contents of log.txt
 this is because the program has generated a password that gtk+ can't decode into shift_jis.
 open log.txt in notepad++ (google it) and change encoding to shift_jis and then remove any results that have
