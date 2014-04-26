@@ -6,9 +6,9 @@ This project is also released under GPL.
 
 NB
 --
-Version 0.42 resolves the issues with AMD drivers if you use the latest driver (13.9)
-This version runs slightly slower (for AMD users) than earlier versions, so for faster searching revert to earlier drivers (such as 12.10) and use version 0.41.
-Consult google on how to properly roll back AMD drivers, as AMD's uninstall does not do this properly.
+As of AMD driver 14.4 (release) all driver issues appear to be resolved for me and my R9 290
+AMD users can try to run the NVIDIA executable until next release for a slight increase in performance (the driver issues were the reason the executables were ever split)
+If issues continue for you even with the 14.4 driver, let me know and i'll keep the amd executable for future versions.
 
 
 Usage
