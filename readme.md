@@ -7,7 +7,8 @@ This project is also released under GPL.
 NB
 --
 As of AMD driver 14.4 (release) all driver issues appear to be resolved for me and my R9 290
-AMD users can try to run the NVIDIA executable until next release for a slight increase in performance (the driver issues were the reason the executables were ever split)
+
+AMD users can try to run the NVIDIA executable until next release for a slight increase in performance (the driver issues were the reason the executables were ever split).
 If issues continue for you even with the 14.4 driver, let me know and i'll keep the amd executable for future versions.
 
 
