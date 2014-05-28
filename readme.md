@@ -19,8 +19,7 @@ Usage
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
 4. Click 'Start (NVIDIA)' or 'Start (AMD)' (linux users should start the relevant executable from the command line)
 5. A sample large target is provided which will search for most words longer than 8 characters in the english language, at once. Simply delete target.txt and rename sample_target_large.txt to target.txt to use it.
-6. Results will show up with proper japanese characters in the right hand column when you close the search. There is no need to manually handle encoding!
-7. If you want to send a tripcode password containing japanese characters to a friend, you can handle encoding by simply using a rich text format (e.g. paste it into a document in wordpad and send the .rtf).
+6. Results will show up with proper japanese characters in the right hand column when you close the search. There should be no need to manually handle encoding. However, there is a bug related to this (Read "Bugs" below).
 
 Releases
 --------
