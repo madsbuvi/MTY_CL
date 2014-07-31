@@ -8,8 +8,7 @@ NB
 --
 As of AMD driver 14.4 (release) all driver issues appear to be resolved for me and my R9 290
 
-AMD users can try to run the NVIDIA executable until next release for a slight increase in performance (the driver issues were the reason the executables were ever split).
-If issues continue for you even with the 14.4 driver, let me know and i'll keep the amd executable for future versions.
+AMD users can run the NVIDIA executable until next release for a slight increase in performance (the driver issues were the reason the executables were ever split). If issues continue for you even with the 14.4 driver, let me know and i'll keep the amd executable for future versions.
 
 
 Usage
@@ -38,63 +37,73 @@ Supported architectures
 =======================
 AMD
 ---
-Written primarily for GCN (Graphics Core Next), used in Souther Islands gpu's (AMD Radeon HD 77xx-79xx).
+Written primarily for GCN (Graphics Core Next), used in Southern Islands gpu's (AMD Radeon HD 77xx-79xx) and newer.
+
 It does work on the older VLIW architectures, (AMD/ATI Radeon HD pre-77xx), but fairly slowly (only about half the speed of MTY) last it was tested.
 
 I've also made a GUI wrapped for Chapuni's version that runs on all VLIW architectures: [mtycal](https://github.com/downloads/madsbuvi/MTY_CL/mtycal.rar).
-The release of MTY that used VLIW AMD/ATI Architectures was unfortunately only released in closed source.
-But it was released on his sourceforge claiming GPL, so at least redistribution should be ok.
+
+The release of MTY that used VLIW AMD/ATI Architectures was unfortunately only released in closed source, so i cannot simply include Chapuni's GPU code. However it was released on his sourceforge claiming GPL, so redistribution of his program should be ok.
 
 NVIDIA
 ------
-The 0.41-42 releases support nvidia GPUs to some extent.
-Nvidias older than 780/Titan do not seem feasible to implement a fast solution to the DES algorithm on. These will run fairly slowly
-compared to the newer nvidia cards and all AMD cards.
-Older nvidias MAY CRASH due to slow execution, if that happens it's best to use a cpu only version like tripcode explorer.
+Support for NVIDIA gpus has existed since version 0.40, however only NVIDIA cards with compute capability 3.5 or higher can expect anything resembling decent performance. Currently this is only the 780 card and newer.
 
-
-Bugs
-----
-For newer cards the gpu memory requirements exceeds the default maximum allowed allocation, and the program crashes with "CL_INVALID_BUFFER_SIZE". To get around this run the command "setx GPU_MAX_ALLOC_PERCENT 100" from the command line. The settings should stick, but if it does not create a .bat file that runs the command then the appropriate executable.
-
-Sometimes the user interface will not display the contents of log.txt
-this is because the program has generated a password that gtk+ can't decode into shift_jis.
-open log.txt in notepad++ (google it) and change encoding to shift_jis and then remove any results that have
-passwords that aren't rendering properly (back them up if you wish, of course).
-
-On linux the GUI will not properly launch the amd/nvidia searchers, start them from the terminal instead.
-
-For some users the program will crash instantly. All known cases are Ivy Bridge on Windows 8. Try running the [Debug Build](http://www.mediafire.com/download/i9fibp97ps6amll/mty_cl_042_-g.rar).
-If that also crashes, run the debug build through [gdb](http://www.equation.com/servlet/equation.cmd?fa=gdb) (see [issue 7](https://github.com/madsbuvi/MTY_CL/issues/7) for instructions) and give me the output (respond to issue 7 or make a new issue).
-This issue SHOULD be fixed in version .43
-
-Don't hesitate to contact me or open an issue if you have any problems with the program.
+This is because on NVIDIA cards with "compute capability" lower than 3.5 there is no way to overcome architectural limitations. To optimally run the search the code needs 130 registers per thread to avoid the need to use shared or global memory, but on compute 3.0 cards and older only 64 are available leading to major register spill to global memory. Manually spilling to shared memory turns out to be much slower than spilling everything to global memory, as occupancy becomes too low.
 
 
 Known Issues
 ------
-Performance is slow on nvidia cards pre-780. This is because the architecture limitations make programming the DES algorithm very dificult.
-Being limited to 64 registers when i need at least ~130 to not have to spill to memory means the computations become bandwidth limited, which is an order of magnitude slower.
-This is the same reason why nvidia users will notice a general system slow-down when using the application, as the gpu hog becomes more noticeable when individual runs from this program takes much longer time.
-
+* **Duplicate results:**
+  Occationally finds the same result twice. I'm aware of this but it is of little consequence.
+* **Empty log:**
+Sometimes the user interface will not display the contents of log.txt. This is because glib, used
+for the conversion from shift_jis to utf8, throws an error and doesn't convert anything if a single
+character is not valid shift_jis, and the program will sometimes generate invalid shift_jis.
+For now fix this by clearing out log.txt of anything that is not correct shift_jis. Acquire notepad++
+or a similar useful text editor, open log.txt, change to shift_jis encoding, and backup and wipe entries
+with bad shift_jis.
+* **Broken gui on linux:**
+On linux the GUI does not actually launch the executable. You'll have to start it from the command line.
+* **Program crashes for some users:**
+  * In windows DEP will crash the program. Disable DEP either globally or for mty_cl.exe
+  * Older AMD drivers crash during JIT compilation, update them.
+  * The program has previously crashed instantly for ivy bridge users on windows 8. This issue arose from 
+mingw generating unsafe vector code, and should be fixed. If not open an issue.
+* **CL_INVALID_BUFFER_SIZE:**
+For newer cards the gpu memory requirements exceeds the default maximum allowed allocation, and the program crashes with "CL_INVALID_BUFFER_SIZE". To get around this run the command *setx GPU_MAX_ALLOC_PERCENT 100* from the command line. The settings should stick, but if it does not create a .bat file that runs the command and then mty_cl.
+* **MTY_CL is slow**:
+  * For older cards from AMD the search is slower than the original MTY: AMD cards with the now old VLIW architecture were not given priority as the original MTY still works for these.
+  *  On NVIDIA cards with "compute capability" lower than 3.5 there is no way to overcome architectural limitations. To optimally run the search the code needs 130 registers per thread to avoid the need to use shared or global memory, but on compute 3.0 cards and older only 64 are available leading to major register spill to global memory. Manually spilling to shared memory turns out to be much slower than spilling everything to global memory, as occupancy becomes too low. If your GPU watchdog timer is set low, the code can then crash the driver as it simply takes too long time to execute.
+* **Garbage results:**
+Ever since the 13.* series of AMD drivers the opencl compiler has been very buggy. The latest release (14.4) and beta drivers fix the issue, so make sure your drivers are the latest version. Do a full driver cleanup and then install version 14.4 before opening an issue about this.
 Changelog
 ---------
-0.43. - Fixed a problem where mty_cl would exit if it found a platform with no devices, instead of ignoring these platforms like it should. Should also fix the problem where the latest intel chips would crash instantly.
-
-0.42. - Workaround for the AMD diver issue. Linux binaries also released.
-
-0.41. - Fixed for amd cards and updated user interface with one button for amd, and one for nvidia.
-
-0.40. - Addd support for nVidia cards. Primarily the 7xx series, earlier series will likely not see great performance. The issue with duplicate keys has been resolved.
-
-0.32. - Fixed a crash
-
-0.31. - Further speedup (1.25x). //No more duplicates.// Well it seems it does still happen, but rarely enough.
-
-0.30. - Shift_JIS keys. Key selection makes a lot of duplicates.
-
-0.20. - Massive speedup (2x).
-
-0.11. - Added a graphical user interface, also released a wrapper for mtycal.
-
-0.10. - First release. ASCII Only and relatively slow. Key selection makes some duplicates.
+* 0.50 (upcoming)
+  * Returned to a single-executable as AMD driver issues are resolved.
+  * The program no longer spits out an error message if it finds a platform with no devices.
+  * Issues a more informative error message if opencl throws CL_INVALID_BUFFER_SIZE
+* 0.43
+  * Fixed a problem where mty_cl would exit if it found a platform with no devices, instead of ignoring these platforms like it should.
+  * Fixed a problem where the latest intel chips would crash instantly.
+* 0.42
+  * Workaround for the AMD diver issue.
+  * Linux binaries released.
+* 0.41
+  * Fixed for amd cards.
+  * Updated user interface with one button for amd, and one for nvidia.
+* 0.40
+  * Added support for NVIDIA cards. Primarily only the 7xx series will work well, earlier series will likely not see great performance.
+* 0.32
+  * Fixed a crash
+* 0.31
+  * Speedup (1.25x)
+* 0.30
+  * Shift_JIS keys.
+* 0.20
+  * Speedup (2x).
+* 0.11
+  * Added a graphical user interface. Also released for mtycal.
+* 0.10 (First release)
+  * ASCII Only.
+  * GCN only.
