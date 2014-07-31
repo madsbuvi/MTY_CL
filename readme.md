@@ -4,8 +4,14 @@ A utility for generating custom tripcodes on various imageboards, utilising GPGP
 Based on Chapuni's [MTY](http://naniya.sourceforge.jp/), released under GPL.
 This project is also released under GPL.
 
-1. [Recent news](https://github.com/madsbuvi/MTY_CL/blob/master/readme.md#nb)
+1. [Recent news](#nb)
 2. [Usage](#usage)
+3. [Download](#releases)
+4. [Supported architectures](#supported-architectures)
+  * [AMD](#amd)
+  * [NVIDIA](#nvidia)
+5. [Known Issues](#known-issues)
+6. [Changelog](#changelog)
 
 NB!
 ---
@@ -21,11 +27,11 @@ Usage
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
 4. Click 'Start (NVIDIA)' or 'Start (AMD)' (linux users should start the relevant executable from the command line)
 5. A sample large target is provided which will search for most words longer than 8 characters in the english language, at once. Simply delete target.txt and rename sample_target_large.txt to target.txt to use it.
-6. Results will show up with proper japanese characters in the right hand column when you close the search. There should be no need to manually handle encoding, however sometimes conversion will fail [Known Issues](https://github.com/madsbuvi/MTY_CL/blob/master/readme.md#known-issues)
+6. Results will show up with proper japanese characters in the right hand column when you close the search. There should be no need to manually handle encoding, however sometimes conversion will fail [Known Issues](#known-issues)
 
 Releases
 --------
-Current version is 0.43:
+Latest version is 0.43:
 Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
 Mediafire:[Windows](http://www.mediafire.com/download/66yf8a8yd1xdk1f/mty_cl_043.rar) [Linux](http://www.mediafire.com/download/gf1r5hfw3tk3fdi/mty_cl_043.tar.gz)
 
@@ -56,7 +62,7 @@ This is because on NVIDIA cards with "compute capability" lower than 3.5 there i
 
 
 Known Issues
-------
+======
 * **Duplicate results:**
   Occationally finds the same result twice. I'm aware of this but it is of little consequence.
 * **Blank log or blank passwords:**
@@ -78,7 +84,7 @@ For newer cards the gpu memory requirements exceeds the default maximum allowed 
 Ever since the 13.* series of AMD drivers the opencl compiler has been very buggy for my code. At the moment of writing, the latest driver (14.4) fixes all known issues with this, so make sure your drivers are the latest version. Do a full driver cleanup and then install version 14.4 or later before opening an issue about this.
 
 Changelog
----------
+======
 * 0.50 (upcoming)
   * Returned to a single-executable as AMD driver issues are resolved.
   * The program no longer spits out an error message if it finds a platform with no devices.
