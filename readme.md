@@ -4,6 +4,9 @@ A utility for generating custom tripcodes on various imageboards, utilising GPGP
 Based on Chapuni's [MTY](http://naniya.sourceforge.jp/), released under GPL.
 This project is also released under GPL.
 
+1. [Recent news](https://github.com/madsbuvi/MTY_CL/blob/master/readme.md#nb)
+2. [Usage](#usage)
+
 NB!
 ---
 As of AMD driver 14.4 (release) all driver issues appear to be resolved for me and my R9 290
