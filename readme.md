@@ -88,7 +88,7 @@ Changelog
   * Fixed a problem where mty_cl would exit if it found a platform with no devices, instead of ignoring these platforms like it should.
   * Fixed a problem where the latest intel chips would crash instantly.
 * 0.42
-  * Workaround for the AMD diver issue.
+  * Yet another fix for AMD diver issues.
   * Linux binaries released.
 * 0.41
   * Fixed for amd cards.
