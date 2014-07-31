@@ -60,7 +60,7 @@ Find your cards compute capability [here](https://developer.nvidia.com/cuda-gpus
 * Fully supported:
  * All compute 3.5 cards
 * Supported, but slow as sin:
- * All compute 3.0 cards
+ * All compute 1.0-3.0 cards
 * Not tested:
  * Compute 5.0 cards
 
