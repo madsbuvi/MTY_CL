@@ -242,11 +242,11 @@ int do_search(int gpu){
 	shared_key[2].key = backup;
 	
 	len_wdict_config = sprintf(wdict_config,
-	#if NVIDIA
+//#if NVIDIA
 	
-	#else
-			"#define AMD 1\n"
-	#endif
+//#else
+//			"#define AMD 1\n"
+//#endif
 			"#define MIN_DICTPOOL %d\n"
 			"#define N_DICTPOOL %d\n"
 			"#define BATCH_SIZE %d\n",
@@ -259,11 +259,11 @@ int do_search(int gpu){
 	const char *sources[] = {
 		K_cl,
 		E_cl,
-		#if NVIDIA
+//#if NVIDIA
 		source_transpose,
-		#else
+//#else
 		
-		#endif
+//#endif
 		source_des,
 		wdict_config,
 		source_sboxdef,
@@ -273,11 +273,11 @@ int do_search(int gpu){
 	const size_t lengths[] = {
 		strlen(K_cl),
 		strlen(E_cl),
-		#if NVIDIA
+//#if NVIDIA
 		len_transpose,
-		#else
+//#else
 		
-		#endif
+//#endif
 		len_des,
 		len_wdict_config,
 		len_sboxdef,
@@ -290,11 +290,11 @@ int do_search(int gpu){
 	lengths, HANDLE_ERROR));
 	
 	/* Build Kernel Program */
-	#if NVIDIA
+//#if NVIDIA
 	ret = clBuildProgram(program, 1, &device_id, "", NULL, NULL);
-	#else
-	ret = clBuildProgram(program, 1, &device_id, "-cl-opt-disable", NULL, NULL);
-	#endif
+//#else
+//	ret = clBuildProgram(program, 1, &device_id, "-cl-opt-disable", NULL, NULL);
+//#endif
 	if(ret){
 		fprintf(stderr, "Error code %d:\n", ret);
 		size_t ssiz = 0;
@@ -305,7 +305,7 @@ int do_search(int gpu){
         printf("build log:\n%s\n", buildString);
 		free(buildString);
 	}
-	fprintf(stderr, "Done.\n");
+	fprintf(stderr, "Done.\r");
 
 	/* Create OpenCL Kernel */
 	
@@ -333,13 +333,13 @@ int do_search(int gpu){
 	HandleErrorRet(clGetKernelWorkGroupInfo  ( kernel, device_id, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(kernel_pref_size), &kernel_pref_size, NULL));
 	HandleErrorRet(clGetKernelWorkGroupInfo  ( kernel, device_id, CL_KERNEL_PRIVATE_MEM_SIZE, sizeof(kernel_priv_size), &kernel_priv_size, NULL));
 
-	#if NVIDIA
+//#if NVIDIA
 	work_group_size = max_kernel_group_size;
 	n = max_compute_units * work_group_size;
-	#else
-	work_group_size = 128;
-	n = max_compute_units * work_group_size * 2;
-	#endif
+//#else
+//	work_group_size = 128;
+//	n = max_compute_units * work_group_size * 2;
+//#endif
 	/* Prepare test launch */
 	
 	//host-side buffers for key related structures.
@@ -499,14 +499,14 @@ int gpu_init(uint32_t seed){
 	source_crypt = (char *)readFile("./gpu.cl",&len_crypt);
 	source_sboxdef = (char *)readFile("./sboxdef.cl", &len_sboxdef);
 	source_cmp = (char *)readFile("./cmp.cl", &len_cmp);
-	#if NVIDIA
+//#if NVIDIA
 	source_des = (char *)readFile("./DES.cl", &len_des);
 	source_transpose = (char *)readFile("./transpose.cl", &len_transpose);
 	assert(source_transpose!=NULL /* reading des source code failed */);
 	assert(len_transpose>0 /* des source was 0 characters long */);
-	#else
-	source_des = (char *)readFile("./DES_AMD.cl", &len_des);
-	#endif
+//#else
+//	source_des = (char *)readFile("./DES_AMD.cl", &len_des);
+//#endif
 	assert(source_crypt!=NULL /* reading gpu source code failed */);
 	assert(len_crypt>0 /* gpu source was 0 characters long */);
 	assert(source_sboxdef!=NULL /* reading gpu source code failed */);

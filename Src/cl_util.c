@@ -127,6 +127,32 @@ const char* oclErrorString(cl_int error)
 void handle_error(cl_int error, int32_t line, const  char *file){
     fprintf(stderr,"Error encountered, code %d:\nAt line: %d\nIn file: %s\nError text:%s\n",
             error, line, file, oclErrorString(error));
+			
+	if(error == CL_INVALID_BUFFER_SIZE)
+	{
+		fprintf(stderr,
+			"MTY_CL was unable to allocate enough memory on one of your GPU devices.\n"
+			"Possible reasons for this are:\n"
+			"\t- Running other programs hogging a lot of GPU memory\n"
+			"\t- Limited maximum memory allocation on GPU devices\n"
+			"\t- Thread concurrency + batch size too large for the device\n"
+			"\n"
+			"On windows the most common issue is limited maximum memory allocation.\n"
+			"To remove this limit, run the following command on any windows command line:\n"
+			"\tsetx GPU_MAX_ALLOC_PERCENT 100\n"
+			"\n"
+			"Thread concurrency and batch size is not currently user configurable.\n"
+			"If removing allocation limit does not work, and you are uses the latest driver\n"
+			"or a recommended driver version, please open an issue at\n"
+			"\thttps://github.com/madsbuvi/MTY_CL\n"
+			"Including the following information:\n"
+			"\t-File name and line number of error\n"
+			"\t-GPU name & available memory on the GPU\n"
+			"\t-OS\n"
+			"\t-Driver version\n"
+		);
+	}
+	
 }
 
 int little_endian(){
@@ -146,57 +172,59 @@ void random_string(uint8_t *string, uint64_t len){
     }
 }
 
+static struct { cl_platform_id platform; cl_device_id device; } * devices;
+static uint32_t n_devices = 0;
+
 uint32_t cl_get_num_gpus(){
-	cl_uint ret_num_devices;
-	cl_uint ret_num_platforms;
+	cl_uint num_platforms;
 	uint32_t gpu_devices = 0;
 	
-	/* Get platforms */
-	HandleErrorRet(clGetPlatformIDs(1, NULL, &ret_num_platforms));
-	cl_platform_id platform_ids[ret_num_platforms];
-	HandleErrorRet(clGetPlatformIDs(ret_num_platforms, platform_ids, &ret_num_platforms));
+	// Get platforms
+	HandleErrorRet(clGetPlatformIDs(1, NULL, &num_platforms));
+	cl_platform_id platform_ids[num_platforms];
+	cl_uint num_devices[num_platforms];
+	HandleErrorRet(clGetPlatformIDs(num_platforms, platform_ids, &num_platforms));
 	
-	/* Count number of GPU devices in each platform */
+	// Count number of GPU devices in each platform
 	int i = 0;
-	for(; i < ret_num_platforms; i++){
-		HandleErrorRet_ignore(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &ret_num_devices));
-		gpu_devices += ret_num_devices;
+	for(; i < num_platforms; i++){
+		HandleErrorRet_ignoreDeviceNotFound(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices[i]));
+		gpu_devices += num_devices[i];
 	}
+	
+	// Initialize structures
+	n_devices = gpu_devices;
+	devices = calloc( gpu_devices, sizeof(*devices) );
+	uint32_t devices_listed = 0;
+	
+	// Populate device list
+	for(i = 0; i < num_platforms; i++)
+	{
+		if(num_devices[i])
+		{
+			cl_device_id device_ids[ num_devices[i] ];
+			HandleErrorRet(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, num_devices[i], device_ids, &num_devices[i]));
+			int j = 0;
+			for(; j < num_devices[i]; j++)
+			{
+				devices[ devices_listed ].platform = platform_ids[i];
+				devices[ devices_listed ].device = device_ids[j];
+			}
+		}
+	}
+	
 	return gpu_devices;
 }
 
 int init_cl_gpu_specific(int32_t gpu_id, cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue){
-	cl_uint ret_num_devices;
-	cl_uint ret_num_platforms;
-	
-	/* Get platforms */
-	HandleErrorRet(clGetPlatformIDs(1, NULL, &ret_num_platforms));
-	cl_platform_id platform_ids[ret_num_platforms];
-	HandleErrorRet(clGetPlatformIDs(ret_num_platforms, platform_ids, &ret_num_platforms));
-	
-	/* Find the platform for the given device */
-	int i = 0;
-	for(; i < ret_num_platforms; i++){
-		HandleErrorRet_ignore(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &ret_num_devices));
-		gpu_id -= ret_num_devices;
-		if(gpu_id < 0){
-			gpu_id += ret_num_devices;break;
-		}
-	}
-	//Device didn't exist
-	if(gpu_id>=ret_num_devices)return -1;
-	
-	cl_device_id device_ids[ret_num_devices];
-	HandleErrorRet(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, ret_num_devices, device_ids, &ret_num_devices));
-	*device_id = device_ids[gpu_id];
-	
-	struct context_property {
+	struct {
 		cl_context_properties property;
 		cl_platform_id id;
 		uint64_t terminate;
-	};
+	} cp = {CL_CONTEXT_PLATFORM, devices[gpu_id].platform, 0};
 	
-	struct context_property cp = {CL_CONTEXT_PLATFORM, platform_ids[i], 0};
+	/* Return the device_id */
+	*device_id = devices[gpu_id].device;
 	
 	/* Create OpenCL context */
 	HandleErrorPar(*context = clCreateContext((cl_context_properties *)&cp, 1, device_id, NULL, NULL, HANDLE_ERROR));
@@ -212,11 +240,11 @@ void init_cl_gpu_single(cl_device_id *device_id, cl_context *context, cl_command
      * Set-up OpenCL
      */
 	cl_uint ret_num_devices;
-	cl_uint ret_num_platforms;
+	cl_uint num_platforms;
 	cl_platform_id platform_id = NULL;
 	/* Get Platform and Device Info */
 
-	HandleErrorRet(clGetPlatformIDs(1, &platform_id, &ret_num_platforms));
+	HandleErrorRet(clGetPlatformIDs(1, &platform_id, &num_platforms));
 	HandleErrorRet(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_id, &ret_num_devices));
 
 	/* Create OpenCL context */
@@ -230,11 +258,11 @@ void init_cl_gpu_single_profiling(cl_device_id *device_id, cl_context *context, 
      * Set-up OpenCL
      */
 	cl_uint ret_num_devices;
-	cl_uint ret_num_platforms;
+	cl_uint num_platforms;
 	cl_platform_id platform_id = NULL;
 	/* Get Platform and Device Info */
 
-	HandleErrorRet(clGetPlatformIDs(1, &platform_id, &ret_num_platforms));
+	HandleErrorRet(clGetPlatformIDs(1, &platform_id, &num_platforms));
 	HandleErrorRet(clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, device_id, &ret_num_devices));
 
 	/* Create OpenCL context */

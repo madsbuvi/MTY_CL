@@ -1,6 +1,6 @@
 #include "mty_gui.h"
 
-#ifdef _W32
+#ifdef _WIN32
 #include <windows.h>
 #else
 
@@ -11,6 +11,8 @@ typedef struct{
 	GtkTextBuffer *log_buffer;
 	const char *executableName;
 }SearchArgs;
+
+
 
 void search(GtkWidget *btn, gpointer data){
 	SearchArgs *args = data;
@@ -27,7 +29,8 @@ void search(GtkWidget *btn, gpointer data){
 		fprintf(stderr, "Couldn't write target.txt, using old target.txt\n");
 		//TODO: Properly alert the user that target.txt couldn't be written.
 	}
-#ifdef _W32
+	
+#ifdef _WIN32
 	gchar name[1024];
 	g_snprintf(name, sizeof(name), "%s.exe", args->executableName);
 	SHELLEXECUTEINFO ShExecInfo = {0};
@@ -35,7 +38,7 @@ void search(GtkWidget *btn, gpointer data){
 	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
 	ShExecInfo.hwnd = NULL;
 	ShExecInfo.lpVerb = "open";
-	ShExecInfo.lpFile = args->executableName;		
+	ShExecInfo.lpFile = name;		
 	ShExecInfo.lpParameters = "";	
 	ShExecInfo.lpDirectory = NULL;
 	ShExecInfo.nShow = SW_SHOW;
@@ -56,25 +59,26 @@ void search(GtkWidget *btn, gpointer data){
 
 
 int main( int argc, char *argv[]){
-	GtkWidget/*Windows*/ 	*window;
-	GtkWidget/*Containers*/ *pane;
-	GtkWidget/*Widgets*/	*start_btn_amd, *start_btn_nvidia;
+	GtkWidget 	*window;
+	GtkWidget	*pane;
+	//GtkWidget/*Widgets*/	*start_btn_amd, *start_btn_nvidia;
+	GtkWidget	*start_btn;
 	GdkColor bg;
 	bg.red = 0x8000;
 	bg.green = 0x9000;
 	bg.blue = 0x8000;
 	
 	//Log
-	GtkWidget/*Containers*/	*log_view, *log_box;
-	GtkWidget/*Widgets*/	*log_scroll, *log_label;
+	GtkWidget	*log_view, *log_box;
+	GtkWidget	*log_scroll, *log_label;
 	GtkTextBuffer *log_buffer;
 	GtkTextIter log_iter;
 	gchar *log;
 	gsize log_len;
 
 	//Target
-	GtkWidget/*Containers*/	*tar_view, *tar_box;
-	GtkWidget/*Widgets*/	*tar_scroll, *tar_label;
+	GtkWidget	*tar_view, *tar_box;
+	GtkWidget	*tar_scroll, *tar_label;
 	GtkTextBuffer *tar_buffer;
 	GtkTextIter tar_iter;
 	gchar *tar;
@@ -88,7 +92,7 @@ int main( int argc, char *argv[]){
 	gtk_window_set_default_size(GTK_WINDOW(window), 768, 480);
 	gtk_window_set_title(GTK_WINDOW(window), "MTY CL");
 	gtk_container_set_border_width(GTK_CONTAINER(window), 5);
-#ifdef _W32
+#ifdef _WIN32
 	GTK_WINDOW(window)->allow_shrink = TRUE;
 #endif
     gtk_widget_modify_bg(window, GTK_STATE_NORMAL, &bg);
@@ -150,6 +154,16 @@ int main( int argc, char *argv[]){
 	
 	
 	/* SET UP START BUTTON */
+	start_btn = gtk_button_new_with_label("Start search");
+	gtk_widget_set_size_request(start_btn, 80, 35);
+	SearchArgs *start_btn_args_amd = calloc(sizeof(SearchArgs),1);
+	start_btn_args_amd->log_buffer = log_buffer;
+	start_btn_args_amd->tar_buffer = tar_buffer;
+	start_btn_args_amd->executableName = "mty_cl";
+	g_signal_connect(start_btn, "clicked", G_CALLBACK(search), start_btn_args_amd);
+	gtk_box_pack_start(GTK_BOX(tar_box), start_btn, FALSE, FALSE, 0);
+	
+	/*
 	start_btn_amd = gtk_button_new_with_label("Start (AMD)");
 	gtk_widget_set_size_request(start_btn_amd, 80, 35);
 	SearchArgs *start_btn_args_amd = calloc(sizeof(SearchArgs),1);
@@ -167,6 +181,7 @@ int main( int argc, char *argv[]){
 	start_btn_args_nvidia->executableName = "mty_cl_nvidia";
 	g_signal_connect(start_btn_nvidia, "clicked", G_CALLBACK(search), start_btn_args_nvidia);
 	gtk_box_pack_start(GTK_BOX(tar_box), start_btn_nvidia, FALSE, FALSE, 0);
+	*/
 	
 	
 	/* SET UP PANE */
