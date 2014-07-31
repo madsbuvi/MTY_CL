@@ -72,7 +72,7 @@ For newer cards the gpu memory requirements exceeds the default maximum allowed 
   * For older cards from AMD the search is slower than the original MTY: AMD cards with the now old VLIW architecture were not given priority as the original MTY still works for these.
   *  On NVIDIA cards with "compute capability" lower than 3.5 there is no way to overcome architectural limitations. To optimally run the search the code needs 130 registers per thread to avoid the need to use shared or global memory, but on compute 3.0 cards and older only 64 are available leading to major register spill to global memory. Manually spilling to shared memory turns out to be much slower than spilling everything to global memory, as occupancy becomes too low. If your GPU watchdog timer is set low, the code can then crash the driver as it simply takes too long time to execute.
 * **Garbage results:**
-Ever since the 13.* series of AMD drivers the opencl compiler has been very buggy. The latest release (14.4) and beta drivers fix the issue, so make sure your drivers are the latest version. Do a full driver cleanup and then install version 14.4 before opening an issue about this.
+Ever since the 13.* series of AMD drivers the opencl compiler has been very buggy for my code. At the moment of writing, the latest driver (14.4) fixes all known issues with this, so make sure your drivers are the latest version. Do a full driver cleanup and then install version 14.4 or later before opening an issue about this.
 
 Changelog
 ---------
