@@ -84,6 +84,8 @@ Changelog
   * Returned to a single-executable as AMD driver issues are resolved.
   * The program no longer spits out an error message if it finds a platform with no devices.
   * Issues a more informative error message if opencl throws CL_INVALID_BUFFER_SIZE
+  * In some cases the logfile would show as empty in the gui. This was due to glib handling broken encoding in some passwords poorly. "broken" passwords now show up as blank, and must be manually read as shift_jis from log.txt using a proper editor such as notepad++.
+  * Glib would duplicate newlines every time target.txt was saved by the gui, this has been fixed.
 * 0.43
   * Fixed a problem where mty_cl would exit if it found a platform with no devices, instead of ignoring these platforms like it should.
   * Fixed a problem where the latest intel chips would crash instantly.
