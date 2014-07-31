@@ -58,7 +58,7 @@ Known Issues
   Occationally finds the same result twice. I'm aware of this but it is of little consequence.
 * **Blank log or blank passwords:**
   * Glib, used for the conversion from shift_jis to utf8, throws an error and doesn't convert anything if a single character is not valid shift_jis, and the program will sometimes generate passwords with invalid shift_jis. To get these passwords you will need to acquire notepad++ or a similar text editor that is better at handling bad encoding, open log.txt, and change to shift_jis encoding.
-  * The CPU searcher uses a different method of choosing keys than the GPU searcher. Occasionally it will recognize a password as being bad shift_jis and choose not to print it at all, in which case the password will be blank even if you open it using notepad++. This part of the code was not written by me, and i don't intend to delve much into it so this problem will unfortunately stay for the foreseeable future.
+  * The CPU searcher uses a different method of choosing keys than the GPU searcher. Occasionally it will recognize a password as being bad shift_jis and choose not to print it at all, in which case the password will be blank even if you open it using notepad++. This part of the code was not written by me, and i don't intend to delve much into it so this problem will unfortunately stay for the foreseeable future. If the trip was a good find you can still try to reconstruct it using [shift_jis tables](http://en.wikipedia.org/wiki/Shift_jis)
 * **Broken gui on linux:**
 On linux the GUI does not actually launch the executable. You'll have to start it from the command line.
 * **Program crashes for some users:**
