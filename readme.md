@@ -46,19 +46,25 @@ Supported architectures
 =======================
 AMD
 ---
-Written primarily for GCN (Graphics Core Next), used in Southern Islands gpu's (AMD Radeon HD 77xx-79xx) and newer.
-
-It does work on the older VLIW architectures, (AMD/ATI Radeon HD pre-77xx), but fairly slowly (only about half the speed of MTY) last it was tested.
-
-I've also made a GUI wrapped for Chapuni's version that runs on all VLIW architectures: [mtycal](https://github.com/downloads/madsbuvi/MTY_CL/mtycal.rar).
-
-The release of MTY that used VLIW AMD/ATI Architectures was unfortunately only released in closed source, so i cannot simply include Chapuni's GPU code. However it was released on his sourceforge claiming GPL, so redistribution of his program should be ok.
+* Fully supported:
+ * All GCN architecture cards:
+  * Southern Islands (7xxx)
+  * Sea Islands (8xxx)
+  * Volcanic Islands (2xx)
+* Supported but slow:
+ * All VLIW cards (6xxx and older)
 
 NVIDIA
 ------
-Support for NVIDIA gpus has existed since version 0.40, however only NVIDIA cards with compute capability 3.5 or higher can expect anything resembling decent performance. Currently this is only the 780 card and newer.
+Find your cards compute capability [here](https://developer.nvidia.com/cuda-gpus).
+* Fully supported:
+ * All compute 3.5 cards
+* Supported, but slow as sin:
+ * All compute 3.0 cards
+* Not tested:
+ * Compute 5.0 cards
 
-This is because on NVIDIA cards with "compute capability" lower than 3.5 there is no way to overcome architectural limitations. To optimally run the search the code needs 130 registers per thread to avoid the need to use shared or global memory, but on compute 3.0 cards and older only 64 are available leading to major register spill to global memory. Manually spilling to shared memory turns out to be much slower than spilling everything to global memory, as occupancy becomes too low.
+Support for NVIDIA gpus has existed since version 0.40, however only NVIDIA cards with compute capability 3.5 or higher can expect anything resembling decent performance. This is because on NVIDIA cards with "compute capability" lower than 3.5 there is no way to overcome architectural limitations. To optimally run the search the code needs 130 registers per thread to avoid the need to use shared or global memory, but on compute 3.0 cards and older only 64 are available leading to major register spill to global memory. Manually spilling to shared memory turns out to be much slower than spilling everything to global memory, as occupancy becomes too low.
 
 
 Known Issues
