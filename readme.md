@@ -86,10 +86,10 @@ Changelog
   * Fixed a problem where mty_cl would exit if it found a platform with no devices, instead of ignoring these platforms like it should.
   * Fixed a problem where the latest intel chips would crash instantly.
 * 0.42
-  * Yet another fix for AMD diver issues.
+  * Yet another fix for AMD drivers...
   * Linux binaries released.
 * 0.41
-  * Fixed for amd cards.
+  * Fix for AMD drivers.
   * Updated user interface with one button for amd, and one for nvidia.
 * 0.40
   * Added support for NVIDIA cards. Primarily only the 7xx series will work well, earlier series will likely not see great performance.
