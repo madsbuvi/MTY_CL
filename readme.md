@@ -18,7 +18,7 @@ Usage
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
 4. Click 'Start (NVIDIA)' or 'Start (AMD)' (linux users should start the relevant executable from the command line)
 5. A sample large target is provided which will search for most words longer than 8 characters in the english language, at once. Simply delete target.txt and rename sample_target_large.txt to target.txt to use it.
-6. Results will show up with proper japanese characters in the right hand column when you close the search. There should be no need to manually handle encoding, however sometimes conversion will fail [Known Issues](https://github.com/madsbuvi/MTY_CL#known-issues)
+6. Results will show up with proper japanese characters in the right hand column when you close the search. There should be no need to manually handle encoding, however sometimes conversion will fail [Known Issues](https://github.com/madsbuvi/MTY_CL/blob/master/readme.md#known-issues)
 
 Releases
 --------
