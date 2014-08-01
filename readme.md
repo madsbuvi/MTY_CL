@@ -49,8 +49,8 @@ AMD
 * Fully supported:
  * All GCN architecture cards:
    * Southern Islands (7xxx)
-   * Sea Islands (8xxx)
-   * Volcanic Islands (2xx)
+    * Sea Islands (8xxx)
+    * Volcanic Islands (2xx)
 * Supported but slow:
  * All VLIW cards (6xxx and older)
 
