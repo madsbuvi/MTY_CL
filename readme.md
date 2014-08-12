@@ -10,7 +10,7 @@ This project is also released under GPL.
 4. [Supported architectures](#supported-architectures)
   * [AMD](#amd)
   * [NVIDIA](#nvidia)
-5. [FAQ](#FAQ)
+5. [FAQ](#faq)
 6. [Known Issues](#known-issues)
 7. [Changelog](#changelog)
 
