@@ -10,8 +10,9 @@ This project is also released under GPL.
 4. [Supported architectures](#supported-architectures)
   * [AMD](#amd)
   * [NVIDIA](#nvidia)
-5. [Known Issues](#known-issues)
-6. [Changelog](#changelog)
+5. [FAQ](#FAQ)
+6. [Known Issues](#known-issues)
+7. [Changelog](#changelog)
 
 NB!
 ---
@@ -53,18 +54,27 @@ AMD
     * Volcanic Islands (2xx)
 * Supported but slow:
  * All VLIW cards (6xxx and older)
+   * Potential for much better speed, but as the original mty works fantastically for these i will not prioritate it.
 
 NVIDIA
 ------
 Find your cards compute capability [here](https://developer.nvidia.com/cuda-gpus).
 * Fully supported:
  * All compute 3.5 cards
-* Supported, but slow as sin:
+* No support:
  * All compute 1.0-3.0 cards
+   * Search may or may not work on these cards, if it does it will do so extremely slowly. On windows they are prone to crash the driver, so i cannot claim they are supported, but some cards *might* be able to run without crashing, albeit very slowly.
 * Not tested:
  * Compute 5.0 cards
 
 Support for NVIDIA gpus has existed since version 0.40, however only NVIDIA cards with compute capability 3.5 or higher can expect anything resembling decent performance. This is because on NVIDIA cards with "compute capability" lower than 3.5 there is no way to overcome architectural limitations. To optimally run the search the code needs 130 registers per thread to avoid the need to use shared or global memory, but on compute 3.0 cards and older only 64 are available leading to major register spill to global memory. Manually spilling to shared memory turns out to be much slower than spilling everything to global memory, as occupancy becomes too low.
+
+FAQ
+===
+* **Why does MTY_CL generate garbage passwords?**
+ * MTY_CL generates passwords in shift_jis encoding. Read them from mty_gui.exe or use some text editor that supports shift_jis encoding. One such editor is [notepad++](http://notepad-plus-plus.org/), just open the file in notepad++ and go to encoding->character sets->japanese->shift_jis.
+* **Why is MTY_CL so slow?**
+ * You either have a bad driver version, or an architecture that has limited support: [Supported architectures](#supported-architectures)
 
 
 Known Issues
