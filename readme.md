@@ -10,8 +10,9 @@ This project is also released under GPL.
 4. [Supported architectures](#supported-architectures)
   * [AMD](#amd)
   * [NVIDIA](#nvidia)
-5. [Known Issues](#known-issues)
-6. [Changelog](#changelog)
+5. [FAQ](#faq)
+6. [Known Issues](#known-issues)
+7. [Changelog](#changelog)
 
 NB!
 ---
@@ -22,7 +23,7 @@ AMD users can run the NVIDIA executable until next release for a slight increase
 
 Usage
 -----
-1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
+1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_50.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
 2. Start mty_gui.exe
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
 4. Click 'Start (NVIDIA)' or 'Start (AMD)' (linux users should start the relevant executable from the command line)
@@ -31,16 +32,16 @@ Usage
 
 Releases
 --------
-Latest version is 0.43:
+Latest version is 0.50:
+Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_50.rar)
+Mediafire: [Windows](http://www.mediafire.com/download/54cs2werdszcce0/mty_cl_50.rar)
+
+Previous version is 0.43, use this if AMD's drivers create issues again:
 Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
 Mediafire:[Windows](http://www.mediafire.com/download/66yf8a8yd1xdk1f/mty_cl_043.rar) [Linux](http://www.mediafire.com/download/gf1r5hfw3tk3fdi/mty_cl_043.tar.gz)
 
-Previous version 0.41:
-[Github](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_041.rar)
-[Mediafire](http://www.mediafire.com/download/7fe6vpm6qr566aa/mty_cl_041.rar)
-
 Original Mtycal with ui:
-[Mediafire](http://www.mediafire.com/download.php?27p2lir4kedb721)
+[Mediafire](http://www.mediafire.com/download/27p2lir4kedb721/mtycal.rar)
 
 Supported architectures
 =======================
@@ -48,23 +49,32 @@ AMD
 ---
 * Fully supported:
  * All GCN architecture cards:
-  * Southern Islands (7xxx)
-  * Sea Islands (8xxx)
-  * Volcanic Islands (2xx)
+   * Southern Islands (7xxx)
+    * Sea Islands (8xxx)
+    * Volcanic Islands (2xx)
 * Supported but slow:
  * All VLIW cards (6xxx and older)
+   * Potential for much better speed, but as the original mty works fantastically for these i will not prioritate it.
 
 NVIDIA
 ------
 Find your cards compute capability [here](https://developer.nvidia.com/cuda-gpus).
 * Fully supported:
  * All compute 3.5 cards
-* Supported, but slow as sin:
+* No support:
  * All compute 1.0-3.0 cards
+   * Search may or may not work on these cards, if it does it will do so extremely slowly. On windows they are prone to crash the driver, so i cannot claim they are supported, but some cards *might* be able to run without crashing, albeit very slowly.
 * Not tested:
  * Compute 5.0 cards
 
 Support for NVIDIA gpus has existed since version 0.40, however only NVIDIA cards with compute capability 3.5 or higher can expect anything resembling decent performance. This is because on NVIDIA cards with "compute capability" lower than 3.5 there is no way to overcome architectural limitations. To optimally run the search the code needs 130 registers per thread to avoid the need to use shared or global memory, but on compute 3.0 cards and older only 64 are available leading to major register spill to global memory. Manually spilling to shared memory turns out to be much slower than spilling everything to global memory, as occupancy becomes too low.
+
+FAQ
+===
+* **Why does MTY_CL generate garbage passwords?**
+ * MTY_CL generates passwords in shift_jis encoding. Read them from mty_gui.exe or use some text editor that supports shift_jis encoding. One such editor is [notepad++](http://notepad-plus-plus.org/), just open the file in notepad++ and go to encoding->character sets->japanese->shift_jis.
+* **Why is MTY_CL so slow?**
+ * You either have a bad driver version, or an architecture that has limited support: [Supported architectures](#supported-architectures)
 
 
 Known Issues
@@ -91,7 +101,7 @@ Ever since the 13.* series of AMD drivers the opencl compiler has been very bugg
 
 Changelog
 ======
-* 0.50 (upcoming)
+* 0.50
   * Returned to a single-executable as AMD driver issues are resolved.
   * The program no longer spits out an error message if it finds a platform with no devices.
   * Issues a more informative error message if opencl throws CL_INVALID_BUFFER_SIZE
