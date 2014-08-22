@@ -1,6 +1,7 @@
 CC = gcc
 CFLAGS = -g3 -Wall -mms-bitfields -Wno-unused-function 
 DEFS = -DDEBUG=0
+#DEFS += -DIGNORE_MEMORY_FAILURE
 BFLAGS = --debug
 LFLAGS = -lpthread -lOpenCL
 

@@ -127,32 +127,6 @@ const char* oclErrorString(cl_int error)
 void handle_error(cl_int error, int32_t line, const  char *file){
     fprintf(stderr,"Error encountered, code %d:\nAt line: %d\nIn file: %s\nError text:%s\n",
             error, line, file, oclErrorString(error));
-			
-	if(error == CL_INVALID_BUFFER_SIZE)
-	{
-		fprintf(stderr,
-			"MTY_CL was unable to allocate enough memory on one of your GPU devices.\n"
-			"Possible reasons for this are:\n"
-			"\t- Running other programs hogging a lot of GPU memory\n"
-			"\t- Limited maximum memory allocation on GPU devices\n"
-			"\t- Thread concurrency + batch size too large for the device\n"
-			"\n"
-			"On windows the most common issue is limited maximum memory allocation.\n"
-			"To remove this limit, run the following command on any windows command line:\n"
-			"\tsetx GPU_MAX_ALLOC_PERCENT 100\n"
-			"\n"
-			"Thread concurrency and batch size is not currently user configurable.\n"
-			"If removing allocation limit does not work, and you are uses the latest driver\n"
-			"or a recommended driver version, please open an issue at\n"
-			"\thttps://github.com/madsbuvi/MTY_CL\n"
-			"Including the following information:\n"
-			"\t-File name and line number of error\n"
-			"\t-GPU name & available memory on the GPU\n"
-			"\t-OS\n"
-			"\t-Driver version\n"
-		);
-	}
-	
 }
 
 int little_endian(){
@@ -298,18 +272,64 @@ void cl_build(char **sources, int n_sources, cl_context context, cl_device_id de
 
 cl_mem __cl_malloc__(cl_context context, size_t size, int line, const  char *file){
 	cl_mem memory_object;
+#if DEBUG >= 1
+fprintf(stderr, "Allocating %u on a GPU... ", size);
+#endif
+
+	if(size<1)
+	{
+		size=16;
+	}
 
 	cl_int error;
 	memory_object = clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, &error);
 	if(error){
+#if DEBUG >= 1
+fprintf(stderr, "fail\n");
+#else
 		handle_error(error, line, file);
+		fprintf(stderr,
+			"MTY_CL was unable to allocate enough memory on one of your GPU devices.\n"
+			"Possible reasons for this are:\n"
+			"\t- Running other programs hogging a lot of GPU memory\n"
+			"\t- Limited maximum memory allocation on GPU devices\n"
+			"\t- Thread concurrency + batch size too large for the device\n"
+			"\n"
+			"On windows the most common issue is limited maximum memory allocation.\n"
+			"To remove this limit, run the following command on any windows command line:\n"
+			"\tsetx GPU_MAX_ALLOC_PERCENT 100\n"
+			"\n"
+			"Thread concurrency and batch size is not currently user configurable.\n"
+			"If removing allocation limit does not work, and you are uses the latest driver\n"
+			"or a recommended driver version, please open an issue at\n"
+			"\thttps://github.com/madsbuvi/MTY_CL\n"
+			"Including the following information:\n"
+			"\t-File name and line number of error\n"
+			"\t-GPU name & available memory on the GPU\n"
+			"\t-OS\n"
+			"\t-Driver version\n"
+			"\n"
+			"Amount of memory that could not be allocated: %u\n",
+				size
+		);
+#endif
+#ifndef IGNORE_MEMORY_FAILURE
+		pthread_exit((void *)oclErrorString(error));
+#endif
 		return 0;
 	}
+#if DEBUG >= 1
+fprintf(stderr, "done\n");
+#endif
 	return memory_object;
 }
 
 void __cl_copy_to__(cl_mem to, void *from, size_t size, size_t offset, cl_command_queue command_queue, int line, const char *file)
 {
+	if(size<1)
+	{
+		size=16;
+	}
 	
     cl_int error = clEnqueueWriteBuffer(command_queue, to, CL_TRUE, offset, size, from, 0, NULL, NULL);
     if(error){
@@ -321,6 +341,10 @@ void __cl_copy_to__(cl_mem to, void *from, size_t size, size_t offset, cl_comman
 
 void __cl_copy_from__(cl_mem from, void *to, size_t size, size_t offset, cl_command_queue command_queue, int line, const char *file)
 {
+	if(size<1)
+	{
+		size=16;
+	}
 	
     cl_int error = clEnqueueReadBuffer(command_queue, from, CL_TRUE, offset, size, to, 0, NULL, NULL);
     if(error){

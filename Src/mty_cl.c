@@ -305,7 +305,7 @@ int do_search(int gpu){
         printf("build log:\n%s\n", buildString);
 		free(buildString);
 	}
-	fprintf(stderr, "Done.\r");
+	fprintf(stderr, "Done.\n");
 
 	/* Create OpenCL Kernel */
 	

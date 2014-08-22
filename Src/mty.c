@@ -437,7 +437,6 @@ static
 NORETURN
 thread_crypt64_new(void *a_param)
 {	
-
 	struct THREAD_PARAM *param = a_param;
 	//if(param->ID) return;
 	CODE_T *code = param->code;
@@ -492,8 +491,9 @@ static struct status {
 	uint64_t lastTime;	/* Time of last display in milliseconds */
 	uint64_t loop;		/* Total number of searches */
 	uint64_t cpu;		/* Number of searches on CPU */
-	uint64_t gpu;		/* Number of seraches on GPU */
+	uint64_t gpu;		/* Number of searches on GPU */
 	uint64_t lastloop;	/* Last display of loop (?) */
+	uint32_t ready;
 } status;
 
 void
@@ -504,6 +504,8 @@ set_start_time(){
 		int i;
 		for (i = 0; i < n_cpus; i++) loop_cpu[i] = 0;
 	}
+	
+	status.ready = 1;
 	
 	ReleaseMutex(mutex_key);
 }
@@ -534,7 +536,7 @@ initialize_gpu_searcher(pthread_t *gpu_handler){
 #endif
 		, gpu_main, NULL);
 	}
-	//pthread_join(*gpu_handler, NULL);
+	if(!num_devices)status.ready = 1;
 }
 
 /***************************************************************
@@ -561,6 +563,7 @@ main(int argc, char *argv[])
 
 #define UPDATE_INTERVAL 8	/* Interval between screen updates in seconds */
   status.startTime = status.lastTime = 0;
+  status.ready = 0;
   uint64_t curTime;
 /*
  I couldn't really translate this:
@@ -767,13 +770,15 @@ main(int argc, char *argv[])
 	  status.lastTime = curTime;
 	  status.lastloop = status.loop;
 	  
-
-	  fprintf(stderr,
-			  "%3d.%03dMtrips/s [%3d.%03dMtrips/s @ CPU,%4d.%03dMtrip/s @ GPU] %"PRIu64 ".%03" PRIu64 "B total\r",
-			  total / 1000, total % 1000,
-			  cpu / 1000, cpu % 1000,
-			  gpu / 1000, gpu % 1000,
-			  status.loop/1000000000, (status.loop/1000000)%1000);
+	  if(status.ready)
+	  {
+		  fprintf(stderr,
+				  "%3d.%03dMtrips/s [%3d.%03dMtrips/s @ CPU,%4d.%03dMtrip/s @ GPU] %"PRIu64 ".%03" PRIu64 "B total\r",
+				  total / 1000, total % 1000,
+				  cpu / 1000, cpu % 1000,
+				  gpu / 1000, gpu % 1000,
+				  status.loop/1000000000, (status.loop/1000000)%1000);
+	  }
 	  cr++;
 	}
 
