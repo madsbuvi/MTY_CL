@@ -23,7 +23,7 @@ AMD users can run the NVIDIA executable until next release for a slight increase
 
 Usage
 -----
-1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_50.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
+1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_51.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
 2. Start mty_gui.exe
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
 4. Click 'Start (NVIDIA)' or 'Start (AMD)' (linux users should start the relevant executable from the command line)
@@ -32,9 +32,9 @@ Usage
 
 Releases
 --------
-Latest version is 0.50:
-Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_50.rar)
-Mediafire: [Windows](http://www.mediafire.com/download/54cs2werdszcce0/mty_cl_50.rar)
+Latest version is 0.51:
+Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_51.rar)
+Mediafire: [Windows](http://www.mediafire.com/download/an134ux1rl1kngr/mty_cl_51.rar)
 
 Previous version is 0.43, use this if AMD's drivers create issues again:
 Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
@@ -101,6 +101,8 @@ Ever since the 13.* series of AMD drivers the opencl compiler has been very bugg
 
 Changelog
 ======
+* 0.51
+  * Fixed a problem where MTY_CL would report and out-of-memory error with some simple targets.
 * 0.50
   * Returned to a single-executable as AMD driver issues are resolved.
   * The program no longer spits out an error message if it finds a platform with no devices.
