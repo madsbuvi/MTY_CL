@@ -153,11 +153,14 @@ uint32_t cl_get_num_gpus(){
 	cl_uint num_platforms;
 	uint32_t gpu_devices = 0;
 	
+	fprintf( stderr, "Enumerating available platforms & devices\n" );
+	
 	// Get platforms
 	HandleErrorRet(clGetPlatformIDs(1, NULL, &num_platforms));
 	cl_platform_id platform_ids[num_platforms];
 	cl_uint num_devices[num_platforms];
 	HandleErrorRet(clGetPlatformIDs(num_platforms, platform_ids, &num_platforms));
+	
 	
 	// Count number of GPU devices in each platform
 	int i = 0;
@@ -166,11 +169,13 @@ uint32_t cl_get_num_gpus(){
 		gpu_devices += num_devices[i];
 	}
 	
-	// Initialize structures
-	n_devices = gpu_devices;
-	devices = calloc( gpu_devices, sizeof(*devices) );
-	uint32_t devices_listed = 0;
 	
+	fprintf( stderr, "Found %d GPUs on %d platforms\n", gpu_devices, num_platforms );
+	
+	// Initialize structures
+	devices = calloc( gpu_devices, sizeof(*devices) );
+	
+	uint32_t devices_listed = 0;
 	// Populate device list
 	for(i = 0; i < num_platforms; i++)
 	{
@@ -181,13 +186,15 @@ uint32_t cl_get_num_gpus(){
 			int j = 0;
 			for(; j < num_devices[i]; j++)
 			{
+				fprintf( stderr, "Device %d on platform %d\n", devices_listed, i );
 				devices[ devices_listed ].platform = platform_ids[i];
 				devices[ devices_listed ].device = device_ids[j];
+				devices_listed++;
 			}
 		}
 	}
 	
-	return gpu_devices;
+	return n_devices = gpu_devices;
 }
 
 int init_cl_gpu_specific(int32_t gpu_id, cl_device_id *device_id, cl_context *context, cl_command_queue *command_queue){

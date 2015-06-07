@@ -514,7 +514,6 @@ set_start_time(){
 static void
 initialize_gpu_searcher(pthread_t *gpu_handler){
 	int num_devices = gpu_init(usec());
-	fprintf(stderr,"Number of GPUs detected: %d\n",num_devices);
 	int i = 0, error;
 	/*
 	if(error = pthread_attr_getschedparam(&tattr,&param))
