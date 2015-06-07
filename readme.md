@@ -32,9 +32,9 @@ Usage
 
 Releases
 --------
-Latest version is 0.51:
-Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_51.rar)
-Mediafire: [Windows](http://www.mediafire.com/download/an134ux1rl1kngr/mty_cl_51.rar)
+Latest version is 0.52:
+Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.rar)
+Mediafire: [Windows](http://www.mediafire.com/download/81635q6e43kjscc/mty_cl_52.rar)
 
 Previous version is 0.43, use this if AMD's drivers create issues again:
 Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
@@ -101,8 +101,10 @@ Ever since the 13.* series of AMD drivers the opencl compiler has been very bugg
 
 Changelog
 ======
+* 0.52
+  * Fixed a minor gaff leading to multi-gpu setups using only 1 GPU (i forgot to update a counter...).
 * 0.51
-  * Fixed a problem where MTY_CL would report and out-of-memory error with some simple targets.
+  * Fixed a problem where MTY_CL would report an out-of-memory error with some simple targets.
 * 0.50
   * Returned to a single-executable as AMD driver issues are resolved.
   * The program no longer spits out an error message if it finds a platform with no devices.
