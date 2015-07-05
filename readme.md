@@ -4,21 +4,14 @@ A utility for generating custom tripcodes on various imageboards, utilising GPGP
 Based on Chapuni's [MTY](http://naniya.sourceforge.jp/), released under GPL.
 This project is also released under GPL.
 
-1. [Recent news](#nb)
-2. [Usage](#usage)
-3. [Download](#releases)
-4. [Supported architectures](#supported-architectures)
+1. [Usage](#usage)
+2. [Download](#releases)
+3. [Supported architectures](#supported-architectures)
   * [AMD](#amd)
   * [NVIDIA](#nvidia)
-5. [FAQ](#faq)
-6. [Known Issues](#known-issues)
-7. [Changelog](#changelog)
-
-NB!
----
-As of AMD driver 14.4 (release) all driver issues appear to be resolved for me and my R9 290
-
-AMD users can run the NVIDIA executable until next release for a slight increase in performance (the driver issues were the reason the executables were ever split). If issues continue for you even with the 14.4 driver, let me know and i'll keep the amd executable for future versions.
+4. [FAQ](#faq)
+5. [Known Issues](#known-issues)
+6. [Changelog](#changelog)
 
 
 Usage
