@@ -16,7 +16,8 @@ This project is also released under GPL.
 
 Usage
 -----
-1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_51.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
+1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.rar)
+[Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.tar.gz)
 2. Start mty_gui.exe
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
 4. Click 'Start (NVIDIA)' or 'Start (AMD)' (linux users should start the relevant executable from the command line)
@@ -27,11 +28,8 @@ Releases
 --------
 Latest version is 0.52:
 Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.rar)
+[Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.tar.gz)
 Mediafire: [Windows](http://www.mediafire.com/download/81635q6e43kjscc/mty_cl_52.rar)
-
-Previous version is 0.43, use this if AMD's drivers create issues again:
-Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
-Mediafire:[Windows](http://www.mediafire.com/download/66yf8a8yd1xdk1f/mty_cl_043.rar) [Linux](http://www.mediafire.com/download/gf1r5hfw3tk3fdi/mty_cl_043.tar.gz)
 
 Original Mtycal with ui:
 [Mediafire](http://www.mediafire.com/download/27p2lir4kedb721/mtycal.rar)
