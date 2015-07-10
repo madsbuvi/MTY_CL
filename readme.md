@@ -30,8 +30,8 @@ Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_5
 Mediafire: [Windows](http://www.mediafire.com/download/81635q6e43kjscc/mty_cl_52.rar)
 
 Previous version is 0.43, use this if AMD's drivers create issues again:
-Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.tar.gz)
-Mediafire:[Windows](http://www.mediafire.com/download/66yf8a8yd1xdk1f/mty_cl_043.rar) [Linux](http://www.mediafire.com/download/gf1r5hfw3tk3fdi/mty_cl_043.tar.gz)
+Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_043.rar) [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.tar.gz
+Mediafire:[Windows](http://www.mediafire.com/download/66yf8a8yd1xdk1f/mty_cl_043.rar)
 
 Original Mtycal with ui:
 [Mediafire](http://www.mediafire.com/download/27p2lir4kedb721/mtycal.rar)
