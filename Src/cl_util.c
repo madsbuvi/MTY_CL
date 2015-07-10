@@ -165,8 +165,11 @@ uint32_t cl_get_num_gpus(){
 	// Count number of GPU devices in each platform
 	int i = 0;
 	for(; i < num_platforms; i++){
-		HandleErrorRet_ignoreDeviceNotFound(clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices[i]));
-		gpu_devices += num_devices[i];
+                num_devices[i] = 0;
+                if( CL_SUCCESS == clGetDeviceIDs(platform_ids[i], CL_DEVICE_TYPE_GPU, 0, NULL, &num_devices[i]))
+                {
+                    gpu_devices += num_devices[i];
+                }
 	}
 	
 	
@@ -317,7 +320,7 @@ fprintf(stderr, "fail\n");
 			"\t-Driver version\n"
 			"\n"
 			"Amount of memory that could not be allocated: %u\n",
-				size
+				(unsigned int)size
 		);
 #endif
 #ifndef IGNORE_MEMORY_FAILURE
