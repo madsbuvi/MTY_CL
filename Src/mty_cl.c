@@ -285,7 +285,7 @@ int do_search(int gpu){
 		len_crypt
 		};
 	
-	fprintf(stderr, "Compiling... ");
+	//fprintf(stderr, "Compiling... ");
 	HandleErrorPar(program = clCreateProgramWithSource(context, sizeof(lengths)/sizeof(const size_t), sources,
 	lengths, HANDLE_ERROR));
 	
@@ -305,7 +305,7 @@ int do_search(int gpu){
         printf("build log:\n%s\n", buildString);
 		free(buildString);
 	}
-	fprintf(stderr, "Done.\n");
+	//fprintf(stderr, "Done.\n");
 
 	/* Create OpenCL Kernel */
 	
@@ -478,6 +478,8 @@ int do_search(int gpu){
     HandleErrorRet(clReleaseMemObject(wdw_gpu));
     HandleErrorRet(clReleaseMemObject(wa_gpu));
     HandleErrorRet(clReleaseKernel(kernel));
+    HandleErrorRet(clReleaseKernel(inc_kernel));
+    HandleErrorRet(clReleaseKernel(clear_kernel));
     HandleErrorRet(clReleaseProgram(program));
     HandleErrorRet(clReleaseCommandQueue(command_queue));
     HandleErrorRet(clReleaseContext(context));
