@@ -16,7 +16,7 @@ This project is also released under GPL.
 
 Usage
 -----
-1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.rar)
+1. Download the latest release: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_53.rar)
 [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.tar.gz)
 2. Start mty_gui.exe
 3. Enter any custom tripcodes you wish for in the left-hand column. Supports Alphabets, i.e. [AaEe]pple will look for any of Apple, apple, Epple and epple.
@@ -26,10 +26,11 @@ Usage
 
 Releases
 --------
-Latest version is 0.52:
-Github: [Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.rar)
+Latest version is 0.53:
+[Windows](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_53.rar)
+
+No 0.53 binaries for linux yet
 [Linux](https://github.com/madsbuvi/MTY_CL/raw/master/Release/mty_cl_52.tar.gz)
-Mediafire: [Windows](http://www.mediafire.com/download/81635q6e43kjscc/mty_cl_52.rar)
 
 Original Mtycal with ui:
 [Mediafire](http://www.mediafire.com/download/27p2lir4kedb721/mtycal.rar)
